@@ -1,5 +1,5 @@
-import type { DifficultyLevel, MazeAction, MazeState } from '@/engine/types';
-import type { ComputeActionRequest, ComputeActionResponse } from '@/types/workerMessage';
+import type { Cell, DifficultyLevel, Direction } from '@/engine/types';
+import type { ComputeDirectionRequest, ComputeDirectionResponse } from '@/types/workerMessage';
 
 export class AIWorkerClient {
   private worker: Worker;
@@ -9,28 +9,30 @@ export class AIWorkerClient {
     this.worker = new Worker(new URL('./aiWorker.ts', import.meta.url), { type: 'module' });
   }
 
-  async getNextAction(
-    state: MazeState,
+  async getNextDirection(
+    from: Cell,
+    goal: Cell,
     difficulty: DifficultyLevel,
     resetAI: boolean = false,
-  ): Promise<MazeAction> {
+  ): Promise<Direction> {
     const requestId = this.nextRequestId++;
-    const payload: ComputeActionRequest = {
-      type: 'computeAction',
+    const payload: ComputeDirectionRequest = {
+      type: 'computeDirection',
       difficulty,
-      state,
+      from,
+      goal,
       requestId,
       resetAI,
     };
 
-    return new Promise<MazeAction>((resolve, reject) => {
-      const handleMessage = (event: MessageEvent<ComputeActionResponse>) => {
+    return new Promise<Direction>((resolve, reject) => {
+      const handleMessage = (event: MessageEvent<ComputeDirectionResponse>) => {
         const data = event.data;
-        if (data.type !== 'action') return;
+        if (data.type !== 'direction') return;
         if (data.requestId !== requestId) return;
         this.worker.removeEventListener('message', handleMessage);
         this.worker.removeEventListener('error', handleError);
-        resolve(data.action);
+        resolve(data.direction);
       };
 
       const handleError = (err: ErrorEvent) => {

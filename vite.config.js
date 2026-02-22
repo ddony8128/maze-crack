@@ -6,10 +6,10 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 var __dirname = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src'),
+    resolve: {
+        alias: {
+            '@': resolve(__dirname, 'src'),
+        },
     },
-  },
-  plugins: [react(), tsconfigPaths(), tailwindcss()],
+    plugins: [react(), tsconfigPaths(), tailwindcss()],
 });

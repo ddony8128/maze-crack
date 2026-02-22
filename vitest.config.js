@@ -3,13 +3,13 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 var __dirname = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src'),
+    resolve: {
+        alias: {
+            '@': resolve(__dirname, 'src'),
+        },
     },
-  },
-  test: {
-    environment: 'node',
-    include: ['src/engine/**/*.test.ts'],
-  },
+    test: {
+        environment: 'node',
+        include: ['src/engine/**/*.test.ts'],
+    },
 });

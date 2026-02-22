@@ -1,15 +1,16 @@
-import type { DifficultyLevel, MazeAction, MazeState } from '@/engine/types';
+import type { Cell, DifficultyLevel, Direction } from '@/engine/types';
 
-export type ComputeActionRequest = {
-  type: 'computeAction';
+export type ComputeDirectionRequest = {
+  type: 'computeDirection';
   difficulty: DifficultyLevel;
-  state: MazeState;
+  from: Cell;
+  goal: Cell;
   requestId: number;
   resetAI?: boolean;
 };
 
-export type ComputeActionResponse = {
-  type: 'action';
+export type ComputeDirectionResponse = {
+  type: 'direction';
   requestId: number;
-  action: MazeAction;
+  direction: Direction;
 };

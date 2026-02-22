@@ -1,18 +1,38 @@
 import { useMemo, useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
-import { MazeGame } from '@/engine/game';
-import type { MazeAction, MazeState } from '@/engine/types';
+import { MazeCrackGame } from '@/engine/game';
+import {
+  Col,
+  Direction,
+  PlayerId,
+  Row,
+  type Cell,
+  type PublicGameState,
+  type TurnResult,
+} from '@/engine/types';
 
 export function TwoPlayerPage() {
-  const game = useMemo(() => new MazeGame({ seed: 1, step: 0 }), []);
-  const [state, setState] = useState<MazeState>(game.getState());
-  const [lastAction, setLastAction] = useState<MazeAction | null>(null);
+  const game = useMemo(() => {
+    const cell = (row: Row, col: Col): Cell => ({ row, col });
+    return new MazeCrackGame({
+      p1Maze: { start: cell(Row.B, Col.C2), goal: cell(Row.E, Col.C5), walls: [] },
+      p2Maze: { start: cell(Row.A, Col.C1), goal: cell(Row.E, Col.C1), walls: [] },
+      startingPlayer: PlayerId.P1,
+    });
+  }, []);
 
-  const stepOnce = (action: MazeAction) => {
-    const next = game.apply(action);
-    setState(next);
-    setLastAction(action);
+  const [publicState, setPublicState] = useState<PublicGameState>(game.getPublicState());
+  const [lastTurn, setLastTurn] = useState<TurnResult | null>(null);
+
+  const stepOnce = (direction: Direction) => {
+    try {
+      const result = game.applyTurn(publicState.currentPlayer, direction);
+      setLastTurn(result);
+      setPublicState(game.getPublicState());
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (
@@ -26,29 +46,27 @@ export function TwoPlayerPage() {
           </p>
           <div className="mt-4 grid gap-2 text-sm">
             <div>
-              <span className="text-muted-foreground">state:</span> {JSON.stringify(state)}
+              <span className="text-muted-foreground">publicState:</span>{' '}
+              {publicState ? JSON.stringify(publicState) : '-'}
             </div>
             <div>
-              <span className="text-muted-foreground">lastAction:</span>{' '}
-              {lastAction ? JSON.stringify(lastAction) : '-'}
+              <span className="text-muted-foreground">lastTurn:</span>{' '}
+              {lastTurn ? JSON.stringify(lastTurn) : '-'}
             </div>
           </div>
         </div>
 
         <div className="card flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={() => stepOnce({ kind: 'move', direction: 'up' })}>
+          <Button variant="secondary" onClick={() => stepOnce(Direction.Up)}>
             위
           </Button>
-          <Button variant="secondary" onClick={() => stepOnce({ kind: 'move', direction: 'down' })}>
+          <Button variant="secondary" onClick={() => stepOnce(Direction.Down)}>
             아래
           </Button>
-          <Button variant="secondary" onClick={() => stepOnce({ kind: 'move', direction: 'left' })}>
+          <Button variant="secondary" onClick={() => stepOnce(Direction.Left)}>
             왼쪽
           </Button>
-          <Button
-            variant="secondary"
-            onClick={() => stepOnce({ kind: 'move', direction: 'right' })}
-          >
+          <Button variant="secondary" onClick={() => stepOnce(Direction.Right)}>
             오른쪽
           </Button>
         </div>

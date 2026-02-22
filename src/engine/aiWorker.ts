@@ -1,15 +1,22 @@
 /// <reference lib="webworker" />
 
-import { difficultyLevel, type DifficultyLevel, type MazeAction, type MazeState } from './types';
-import type { ComputeActionRequest, ComputeActionResponse } from '@/types/workerMessage';
+import {
+  Direction,
+  difficultyLevel,
+  type Cell,
+  type DifficultyLevel,
+  type Direction as Dir,
+} from './types';
+import { colToIndex, rowToIndex } from './coord';
+import type { ComputeDirectionRequest, ComputeDirectionResponse } from '@/types/workerMessage';
 
-const ctx: DedicatedWorkerGlobalScope = self as any;
+const ctx: DedicatedWorkerGlobalScope = self as DedicatedWorkerGlobalScope;
 
 let LOCK = false;
 
 type SimpleAI = {
   reset: () => void;
-  next: (state: MazeState) => MazeAction;
+  next: (from: Cell, goal: Cell) => Dir;
 };
 
 const aiInstances: Partial<Record<DifficultyLevel, SimpleAI>> = {};
@@ -17,12 +24,25 @@ const aiInstances: Partial<Record<DifficultyLevel, SimpleAI>> = {};
 function createAI(level: DifficultyLevel): SimpleAI {
   let counter = 0;
 
-  const next = (state: MazeState): MazeAction => {
+  const next = (from: Cell, goal: Cell): Dir => {
     counter++;
-    const dirs: MazeAction['direction'][] = ['up', 'down', 'left', 'right'];
-    const index =
-      level === difficultyLevel.Hard ? (state.seed + counter) % dirs.length : counter % dirs.length;
-    return { kind: 'move', direction: dirs[index] };
+    const dr = rowToIndex(goal.row) - rowToIndex(from.row);
+    const dc = colToIndex(goal.col) - colToIndex(from.col);
+
+    const preferred: Dir[] = [];
+    if (dr < 0) preferred.push(Direction.Up);
+    if (dr > 0) preferred.push(Direction.Down);
+    if (dc < 0) preferred.push(Direction.Left);
+    if (dc > 0) preferred.push(Direction.Right);
+
+    const fallback: Dir[] = [Direction.Up, Direction.Down, Direction.Left, Direction.Right];
+    const candidates = preferred.length > 0 ? preferred : fallback;
+
+    const idx =
+      level === difficultyLevel.Hard
+        ? counter % candidates.length
+        : (counter + 1) % candidates.length;
+    return candidates[idx] ?? Direction.Up;
   };
 
   const reset = () => {
@@ -39,9 +59,9 @@ function getOrCreateAI(level: DifficultyLevel): SimpleAI {
   return aiInstances[level]!;
 }
 
-ctx.onmessage = async (event: MessageEvent<ComputeActionRequest>) => {
+ctx.onmessage = async (event: MessageEvent<ComputeDirectionRequest>) => {
   const data = event.data;
-  if (data.type !== 'computeAction') return;
+  if (data.type !== 'computeDirection') return;
 
   while (LOCK) {
     await new Promise((resolve) => setTimeout(resolve, 10));
@@ -53,8 +73,12 @@ ctx.onmessage = async (event: MessageEvent<ComputeActionRequest>) => {
     ai.reset();
   }
 
-  const action = ai.next(data.state);
-  const response: ComputeActionResponse = { type: 'action', requestId: data.requestId, action };
+  const direction = ai.next(data.from, data.goal);
+  const response: ComputeDirectionResponse = {
+    type: 'direction',
+    requestId: data.requestId,
+    direction,
+  };
   ctx.postMessage(response);
 
   LOCK = false;
