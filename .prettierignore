@@ -1,0 +1,5 @@
+dist
+node_modules
+reverse-chess
+tailwind.config.d.ts
+
