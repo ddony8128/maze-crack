@@ -10,10 +10,8 @@ export function MainMenuPage() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-5 py-14 sm:px-8 sm:py-20">
       <div className="mb-10 text-center sm:mb-14">
-        <h1 className="game-title mb-2">maze-crack</h1>
-        <p className="text-muted-foreground text-sm sm:text-base">
-          미로를 “깨는” 게임 엔진/AI 실험장
-        </p>
+        <h1 className="game-title mb-2">Maze Crack</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">상대의 미로를 해독하라!</p>
       </div>
 
       <div className="flex w-[clamp(220px,70vw,360px)] flex-col gap-3 sm:gap-4">
