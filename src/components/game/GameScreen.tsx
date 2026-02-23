@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Direction, PublicGameState } from '@/engine/types';
 import { aiChooseDirection } from '@/engine/ai';
-import { DIR_LABELS, posLabel } from '@/engine/coord';
 import MazeGrid from './MazeGrid';
 import { Button } from '@/components/ui/button';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Home } from 'lucide-react';
@@ -22,7 +21,6 @@ export default function GameScreen({ state, onMove, onHome, onConfirmWallHit }: 
     positions,
     discoveredWalls,
     visited,
-    log,
     difficulty,
     wallHitPending,
   } = state;
@@ -33,9 +31,15 @@ export default function GameScreen({ state, onMove, onHome, onConfirmWallHit }: 
   const pos = positions[idx]!;
   const isAITurn = mode === 'PVE' && currentTurn === 'P2';
   const inputEnabled = !isAITurn && !wallHitPending;
-  const turnLabel = mode === 'PVE' ? (isP1 ? 'Player' : 'AI') : currentTurn;
-  const logRef = useRef<HTMLDivElement>(null);
+  const headerText =
+    mode === 'PVE'
+      ? isP1
+        ? '당신의 턴'
+        : 'AI의 턴'
+      : `${currentTurn}의 턴`;
   const controlSize = 'clamp(44px, 14vw, 56px)';
+  const [shake, setShake] = useState(false);
+  const prevPendingRef = useRef<boolean>(wallHitPending);
 
   useEffect(() => {
     if (isAITurn && state.phase === 'PLAY' && !wallHitPending) {
@@ -58,8 +62,14 @@ export default function GameScreen({ state, onMove, onHome, onConfirmWallHit }: 
   }, [isAITurn, wallHitPending, onConfirmWallHit]);
 
   useEffect(() => {
-    logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' });
-  }, [log.length]);
+    const wasPending = prevPendingRef.current;
+    if (!wasPending && wallHitPending) {
+      setShake(true);
+      const t = window.setTimeout(() => setShake(false), 800);
+      return () => window.clearTimeout(t);
+    }
+    prevPendingRef.current = wallHitPending;
+  }, [wallHitPending]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -116,38 +126,43 @@ export default function GameScreen({ state, onMove, onHome, onConfirmWallHit }: 
         <div className="text-center">
           <span
             className={cn(
-              'neon-text text-[clamp(1rem,4.2vw,1.25rem)] font-bold',
+              'neon-text text-[clamp(1.1rem,4.8vw,1.45rem)] font-bold',
               isP1 ? 'text-primary' : 'text-accent neon-text-accent',
             )}
           >
-            {turnLabel}의 턴
-          </span>
-          <span className="text-muted-foreground ml-2 text-[clamp(0.7rem,2.6vw,0.8rem)]">
-            #{log.length + 1}
+            {headerText}
           </span>
         </div>
         <div className="w-8" />
       </div>
 
       {isAITurn && !wallHitPending ? (
-        <p className="text-accent animate-pulse text-sm">AI 생각 중...</p>
+        <p className="text-accent animate-pulse text-base">AI 생각 중...</p>
       ) : null}
 
-      {wallHitPending ? (
-        <div className="animate-float-in flex flex-col items-center gap-2">
-          <p className="text-destructive text-sm font-bold">🚧 벽에 부딪혔습니다!</p>
-          {!isAITurn ? (
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-destructive/40 text-destructive hover:bg-destructive/10"
-              onClick={onConfirmWallHit}
-            >
-              확인 (턴 넘기기)
-            </Button>
-          ) : null}
+      <div className="flex w-full max-w-[min(92vw,28rem)] items-center justify-between">
+        <div
+          className={cn(
+            'text-destructive text-base font-bold',
+            wallHitPending ? 'opacity-100' : 'opacity-0',
+          )}
+          aria-live="polite"
+        >
+          🚧 벽에 부딪혔습니다!
         </div>
-      ) : null}
+
+        <Button
+          size="default"
+          variant="outline"
+          className={cn(
+            'border-destructive/40 text-destructive hover:bg-destructive/10',
+            !wallHitPending || isAITurn ? 'pointer-events-none opacity-0' : 'opacity-100',
+          )}
+          onClick={onConfirmWallHit}
+        >
+          턴 넘기기
+        </Button>
+      </div>
 
       <MazeGrid
         walls={discoveredWalls[idx]}
@@ -155,11 +170,8 @@ export default function GameScreen({ state, onMove, onHome, onConfirmWallHit }: 
         goal={maze.goal}
         playerPos={pos}
         visitedCells={visited[idx]}
+        shake={shake}
       />
-
-      <p className="text-muted-foreground font-mono-game text-[clamp(0.72rem,2.8vw,0.8rem)]">
-        위치: {posLabel(pos)} → 목표: {posLabel(maze.goal)}
-      </p>
 
       <div
         className="grid w-fit gap-2"
@@ -183,29 +195,6 @@ export default function GameScreen({ state, onMove, onHome, onConfirmWallHit }: 
             {icon}
           </Button>
         ))}
-      </div>
-
-      <div
-        ref={logRef}
-        className="bg-card border-border font-mono-game h-[clamp(6rem,18vh,8.5rem)] w-full max-w-[min(92vw,28rem)] overflow-y-auto rounded-lg border p-2 text-[clamp(0.72rem,2.8vw,0.8rem)] sm:p-3"
-      >
-        {log.length === 0 ? (
-          <p className="text-muted-foreground">이동 로그가 여기에 표시됩니다</p>
-        ) : null}
-        <div className="space-y-0.5">
-          {log.map((entry, i) => (
-            <div
-              key={`${i}-${entry.player}-${entry.direction}`}
-              className={cn('flex gap-2', entry.success ? 'text-green-400' : 'text-destructive')}
-            >
-              <span className="text-muted-foreground w-6 text-right">#{i + 1}</span>
-              <span className="w-12">{entry.player}</span>
-              <span>{DIR_LABELS[entry.direction]}</span>
-              <span>{entry.success ? '✓' : '✗ 벽'}</span>
-              <span className="text-muted-foreground">→ {posLabel(entry.position)}</span>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

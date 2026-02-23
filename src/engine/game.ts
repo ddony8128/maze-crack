@@ -90,9 +90,6 @@ export class MazeCrackGame {
     const from = this.state.positions[idx];
     const { to, barrier, wallKey } = maze.canMove(from, direction);
 
-    const playerLabel =
-      this.state.mode === 'PVE' ? (player === 'P1' ? 'Player' : 'AI') : (player as string);
-
     if (barrier !== null) {
       if (barrier === 'wall' && wallKey) {
         const known = this.state.discoveredWalls[idx];
@@ -110,7 +107,7 @@ export class MazeCrackGame {
         wallHitPending: true,
         log: [
           ...this.state.log,
-          { player: playerLabel, direction, success: false, position: { ...from } },
+          { playerId: player, direction, success: false, position: { ...from } },
         ],
       };
 
@@ -137,7 +134,7 @@ export class MazeCrackGame {
       winner: didWin ? player : null,
       log: [
         ...this.state.log,
-        { player: playerLabel, direction, success: true, position: { ...to } },
+        { playerId: player, direction, success: true, position: { ...to } },
       ],
     };
 

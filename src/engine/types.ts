@@ -31,7 +31,7 @@ export type MazeSpec = {
 };
 
 export type LogEntry = {
-  player: string;
+  playerId: PlayerId;
   direction: Direction;
   success: boolean;
   position: Position;

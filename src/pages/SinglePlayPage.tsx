@@ -80,10 +80,10 @@ export function SinglePlayPage() {
 
   if (phase === 'AI_BUILD') {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-6">
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-6 p-6">
         <Loader2 className="text-primary h-12 w-12 animate-spin" />
-        <h2 className="neon-text text-primary text-xl font-bold">AI가 미로를 제작 중...</h2>
-        <p className="text-muted-foreground text-sm">
+        <h2 className="neon-text text-primary text-2xl font-bold">AI가 미로를 제작 중...</h2>
+        <p className="text-muted-foreground text-base">
           {aiBuildDone ? '완료!' : '벽을 배치하고 있습니다'}
         </p>
       </div>
@@ -92,12 +92,7 @@ export function SinglePlayPage() {
 
   if (phase === 'WIN' && gameState) {
     return (
-      <WinScreen
-        winner={gameState.winner!}
-        mode={gameState.mode}
-        mazes={gameState.mazes}
-        onRestart={() => navigate('/')}
-      />
+      <WinScreen finalState={gameState} onRestart={() => navigate('/')} />
     );
   }
 

@@ -176,6 +176,38 @@
     transform: translateY(0);
   }
 }
+
+@keyframes mc-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  12% {
+    transform: translateX(-8px);
+  }
+  24% {
+    transform: translateX(8px);
+  }
+  36% {
+    transform: translateX(-6px);
+  }
+  48% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  72% {
+    transform: translateX(4px);
+  }
+  84% {
+    transform: translateX(-2px);
+  }
+}
+
+.mc-shake {
+  animation: mc-shake 0.8s ease-in-out;
+}
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }

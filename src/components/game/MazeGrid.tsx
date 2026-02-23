@@ -11,6 +11,7 @@ interface MazeGridProps {
   goal: Position | null;
   playerPos?: Position | null;
   visitedCells?: string[];
+  shake?: boolean;
   editable?: boolean;
   activeTool?: BuilderTool;
   onCellClick?: (pos: Position) => void;
@@ -32,6 +33,7 @@ export default function MazeGrid({
   goal,
   playerPos,
   visitedCells = [],
+  shake = false,
   editable = false,
   activeTool,
   onCellClick,
@@ -87,7 +89,7 @@ export default function MazeGrid({
           <div
             key={key}
             className={cn(
-              'flex items-center justify-center rounded-sm font-mono text-[clamp(0.65rem,2.6vw,0.8rem)] font-bold transition-all duration-200 select-none',
+              'flex items-center justify-center rounded-sm font-mono text-[clamp(0.75rem,2.9vw,0.95rem)] font-bold transition-all duration-200 select-none',
               isP
                 ? 'bg-primary neon-glow text-primary-foreground z-10'
                 : isG
@@ -104,9 +106,9 @@ export default function MazeGrid({
             {isP ? (
               '●'
             ) : isG ? (
-              <span className="neon-text-accent text-accent">G</span>
+              <span className="neon-text-accent text-accent text-[0.95em]">도착</span>
             ) : isS ? (
-              <span className="text-primary/60">S</span>
+              <span className="text-primary/70 text-[0.95em]">출발</span>
             ) : (
               ''
             )}
@@ -156,9 +158,10 @@ export default function MazeGrid({
     <div
       className={cn(
         'border-primary/20 aspect-square w-full overflow-hidden rounded-lg border-2',
+        shake && 'mc-shake',
         compact
           ? 'max-w-[min(56vw,220px)] sm:max-w-[min(40vw,240px)]'
-          : 'max-w-[min(92vw,420px)] sm:max-w-[min(80vw,460px)]',
+          : 'max-w-[min(76vw,420px)] sm:max-w-[min(80vw,460px)]',
         'mx-auto',
       )}
       style={

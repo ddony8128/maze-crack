@@ -75,12 +75,7 @@ export function TwoPlayerPage() {
 
   if (phase === 'WIN' && gameState) {
     return (
-      <WinScreen
-        winner={gameState.winner!}
-        mode={gameState.mode}
-        mazes={gameState.mazes}
-        onRestart={() => navigate('/')}
-      />
+      <WinScreen finalState={gameState} onRestart={() => navigate('/')} />
     );
   }
 

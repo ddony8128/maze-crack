@@ -18,14 +18,14 @@ export function MainMenuPage() {
 
       <div className="flex w-[clamp(220px,70vw,360px)] flex-col gap-3 sm:gap-4">
         <Button className="btn-menu" onClick={() => navigate('/tutorial')}>
-          튜토리얼(임시)
+          튜토리얼
         </Button>
 
         <Button
           className="btn-menu flex items-center justify-center gap-2"
           onClick={() => setIsSingleOpen((v) => !v)}
         >
-          혼자 하기(임시)
+          혼자 하기
           <ChevronDown className="h-5 w-5" />
         </Button>
         {isSingleOpen && (
@@ -40,12 +40,8 @@ export function MainMenuPage() {
         )}
 
         <Button className="btn-menu" onClick={() => navigate('/two')}>
-          둘이 하기(임시)
+          둘이 하기
         </Button>
-      </div>
-
-      <div className="text-muted-foreground mt-10 text-center text-[clamp(0.7rem,2.6vw,0.8rem)] sm:mt-14">
-        엔진/규칙/AI 구조는 이후 `src/engine`에서 교체/확장하세요.
       </div>
     </div>
   );

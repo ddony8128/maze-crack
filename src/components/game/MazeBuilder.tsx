@@ -50,17 +50,17 @@ export default function MazeBuilder({ owner, onComplete, onBack }: MazeBuilderPr
   };
 
   const tools: { id: BuilderTool; label: string; icon: React.ReactNode }[] = [
-    { id: 'START', label: 'S', icon: <MapPin className="h-4 w-4" /> },
-    { id: 'GOAL', label: 'G', icon: <Flag className="h-4 w-4" /> },
+    { id: 'START', label: '출발', icon: <MapPin className="h-4 w-4" /> },
+    { id: 'GOAL', label: '도착', icon: <Flag className="h-4 w-4" /> },
     { id: 'WALL', label: '벽', icon: <Fence className="h-4 w-4" /> },
   ];
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-5 p-4">
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-5 p-4 sm:gap-6 sm:p-6">
       {onBack ? (
         <Button
           variant="ghost"
-          size="sm"
+          size="default"
           className="text-muted-foreground absolute top-4 left-4"
           onClick={onBack}
         >
@@ -68,14 +68,14 @@ export default function MazeBuilder({ owner, onComplete, onBack }: MazeBuilderPr
         </Button>
       ) : null}
 
-      <h2 className="text-primary text-xl font-bold">{owner} — 미로 제작</h2>
+      <h2 className="text-primary text-2xl font-bold">{owner} — 미로 제작</h2>
 
       <div className="flex gap-2">
         {tools.map((t) => (
           <Button
             key={t.id}
             variant={tool === t.id ? 'default' : 'outline'}
-            size="sm"
+            size="default"
             className={cn(
               'gap-1.5',
               tool === t.id
@@ -89,9 +89,9 @@ export default function MazeBuilder({ owner, onComplete, onBack }: MazeBuilderPr
         ))}
       </div>
 
-      <p className="text-muted-foreground text-sm">
-        {tool === 'START' && '셀을 탭하여 출발점(S) 지정'}
-        {tool === 'GOAL' && '셀을 탭하여 도착점(G) 지정'}
+      <p className="text-muted-foreground text-base">
+        {tool === 'START' && '셀을 탭하여 출발점 지정'}
+        {tool === 'GOAL' && '셀을 탭하여 도착점 지정'}
         {tool === 'WALL' && '칸 사이를 탭하여 벽 토글'}
       </p>
 
@@ -105,13 +105,13 @@ export default function MazeBuilder({ owner, onComplete, onBack }: MazeBuilderPr
         onWallToggle={handleWallToggle}
       />
 
-      <div className="text-sm font-medium">
+      <div className="text-base font-medium">
         {!start || !goal ? (
-          <span className="text-muted-foreground">S와 G를 배치하세요</span>
+          <span className="text-muted-foreground">출발점과 도착점을 배치하세요</span>
         ) : isValid ? (
           <span className="text-green-400">✓ 유효한 미로</span>
         ) : (
-          <span className="text-destructive">✗ S→G 경로 없음</span>
+          <span className="text-destructive">✗ 출발점부터 도착점까지 갈 수 있는 방법이 없습니다</span>
         )}
       </div>
 
