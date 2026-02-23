@@ -9,7 +9,7 @@ import tseslint from 'typescript-eslint';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-  globalIgnores(['dist', 'reverse-chess', 'node_modules', 'tailwind.config.d.ts']),
+  globalIgnores(['dist', 'reverse-chess', 'ui_sample', 'node_modules', 'tailwind.config.d.ts']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

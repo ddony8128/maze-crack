@@ -1,164 +1,212 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { PageHeader } from '@/components/PageHeader';
-import { Button } from '@/components/ui/button';
-import { AIWorkerClient } from '@/engine/aiWorkerClient';
-import {
-  Col,
+import { useEffect, useReducer, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
+import type {
+  Difficulty,
   Direction,
   GamePhase,
-  PlayerId,
-  Row,
-  difficultyLevel,
-  type Cell,
-  type DifficultyLevel,
-  type PublicGameState,
-  type TurnResult,
-} from '@/engine/types';
-import { MazeCrackGame } from '@/engine/game';
+  GameState,
+  LogEntry,
+  Maze,
+  Player,
+  Position,
+} from '@/types/game';
+import { applyDirection, generateAIMaze, inBounds, makeWallKey, posKey } from '@/utils/maze';
+import GameScreen from '@/components/game/GameScreen';
+import MazeBuilder from '@/components/game/MazeBuilder';
+import { WinScreen } from '@/components/game/Screens';
 
 export function SinglePlayPage() {
   const { difficulty } = useParams<{ difficulty: string }>();
-  const resolvedDifficulty: DifficultyLevel =
-    difficulty === 'hard' ? difficultyLevel.Hard : difficultyLevel.Easy;
+  const navigate = useNavigate();
 
-  const gameRef = useRef<MazeCrackGame | null>(null);
-  const aiClientRef = useRef<AIWorkerClient | null>(null);
-  const aiRequestGenerationRef = useRef(0);
+  const resolvedDifficulty: Difficulty = difficulty === 'hard' ? 'HARD' : 'EASY';
 
-  const [publicState, setPublicState] = useState<PublicGameState | null>(null);
-  const [lastTurn, setLastTurn] = useState<TurnResult | null>(null);
-  const [autoPlay, setAutoPlay] = useState(true);
-
-  const initGame = useCallback(() => {
-    const cell = (row: Row, col: Col): Cell => ({ row, col });
-
-    const game = new MazeCrackGame({
-      // p1Maze / p2Maze는 "각 플레이어가 설계한 비밀 미로"에 해당
-      // (싱글 데모에선 벽이 없는 단순 미로로 구성)
-      p1Maze: {
-        start: cell(Row.B, Col.C2),
-        goal: cell(Row.E, Col.C5),
-        walls: [],
-      },
-      p2Maze: {
-        start: cell(Row.A, Col.C1),
-        goal: cell(Row.E, Col.C1),
-        walls: [],
-      },
-      startingPlayer: PlayerId.P1,
-    });
-
-    gameRef.current = game;
-    setPublicState(game.getPublicState());
-    setLastTurn(null);
-    setAutoPlay(true);
-    aiRequestGenerationRef.current += 1;
-  }, []);
-
-  useEffect(() => {
-    initGame();
-  }, [initGame, resolvedDifficulty]);
-
-  useEffect(() => {
-    aiClientRef.current = new AIWorkerClient();
-    return () => {
-      aiClientRef.current?.dispose();
-      aiClientRef.current = null;
-    };
-  }, [resolvedDifficulty]);
-
-  const reset = () => {
-    initGame();
+  const initialState: GameState = {
+    mode: 'PVE',
+    phase: 'BUILD_P1',
+    difficulty: resolvedDifficulty,
+    mazes: [null, null],
+    positions: [null, null],
+    currentTurn: 'P1',
+    discoveredWalls: [[], []],
+    visited: [[], []],
+    log: [],
+    winner: null,
+    tutorialStep: 0,
+    wallHitPending: false,
   };
 
-  const stepOnce = useCallback((player: PlayerId, direction: Direction) => {
-    const game = gameRef.current;
-    if (!game) return;
+  type Action =
+    | { type: 'SUBMIT_MAZE_P1'; maze: Maze }
+    | { type: 'AI_READY'; maze: Maze }
+    | { type: 'MOVE'; direction: Direction }
+    | { type: 'CONFIRM_WALL_HIT' }
+    | { type: 'GO_HOME' };
 
-    try {
-      const result = game.applyTurn(player, direction);
-      setLastTurn(result);
-      setPublicState(game.getPublicState());
-    } catch (e) {
-      console.error(e);
+  function startPlay(mazes: [Maze | null, Maze | null]): Partial<GameState> {
+    const p1OpponentMaze = mazes[1]!;
+    const p2OpponentMaze = mazes[0]!;
+    return {
+      mazes,
+      phase: 'PLAY' as GamePhase,
+      currentTurn: 'P1' as Player,
+      positions: [p1OpponentMaze.start, p2OpponentMaze.start],
+      visited: [[posKey(p1OpponentMaze.start)], [posKey(p2OpponentMaze.start)]],
+      discoveredWalls: [[], []],
+      log: [],
+      winner: null,
+      wallHitPending: false,
+    };
+  }
+
+  function reducer(state: GameState, action: Action): GameState {
+    switch (action.type) {
+      case 'SUBMIT_MAZE_P1': {
+        const mazes: [Maze | null, Maze | null] = [action.maze, state.mazes[1]];
+        return { ...state, mazes, phase: 'AI_BUILD' };
+      }
+      case 'AI_READY': {
+        const mazes: [Maze | null, Maze | null] = [state.mazes[0], action.maze];
+        return { ...state, ...startPlay(mazes) };
+      }
+      case 'MOVE': {
+        if (state.wallHitPending) return state;
+        if (state.phase !== 'PLAY') return state;
+
+        const isP1 = state.currentTurn === 'P1';
+        const idx = isP1 ? 0 : 1;
+        const mazeIdx = isP1 ? 1 : 0;
+        const maze = state.mazes[mazeIdx]!;
+        const pos = state.positions[idx]!;
+        const np = applyDirection(pos, action.direction);
+
+        const playerLabel = isP1 ? 'Player' : 'AI';
+        const logEntryFail: LogEntry = {
+          player: playerLabel,
+          direction: action.direction,
+          success: false,
+          position: pos,
+        };
+
+        if (!inBounds(np)) {
+          return { ...state, wallHitPending: true, log: [...state.log, logEntryFail] };
+        }
+
+        const wk = makeWallKey(pos, np);
+        if (maze.walls.includes(wk)) {
+          const dw: [string[], string[]] = [
+            idx === 0
+              ? state.discoveredWalls[0].includes(wk)
+                ? state.discoveredWalls[0]
+                : [...state.discoveredWalls[0], wk]
+              : state.discoveredWalls[0],
+            idx === 1
+              ? state.discoveredWalls[1].includes(wk)
+                ? state.discoveredWalls[1]
+                : [...state.discoveredWalls[1], wk]
+              : state.discoveredWalls[1],
+          ];
+          return {
+            ...state,
+            discoveredWalls: dw,
+            wallHitPending: true,
+            log: [...state.log, logEntryFail],
+          };
+        }
+
+        const newPositions: [Position | null, Position | null] = [
+          state.positions[0],
+          state.positions[1],
+        ];
+        newPositions[idx] = np;
+
+        const newVisited: [string[], string[]] = [state.visited[0], state.visited[1]];
+        newVisited[idx] = [...newVisited[idx], posKey(np)];
+
+        const isWin = np.row === maze.goal.row && np.col === maze.goal.col;
+
+        const logEntryOk: LogEntry = {
+          player: playerLabel,
+          direction: action.direction,
+          success: true,
+          position: np,
+        };
+
+        return {
+          ...state,
+          positions: newPositions,
+          visited: newVisited,
+          winner: isWin ? state.currentTurn : null,
+          phase: isWin ? 'WIN' : 'PLAY',
+          log: [...state.log, logEntryOk],
+        };
+      }
+      case 'CONFIRM_WALL_HIT': {
+        const isP1 = state.currentTurn === 'P1';
+        return { ...state, wallHitPending: false, currentTurn: isP1 ? 'P2' : 'P1' };
+      }
+      case 'GO_HOME':
+        return { ...initialState, phase: 'BUILD_P1' };
+      default:
+        return state;
     }
-  }, []);
+  }
+
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  const [aiBuildDone, setAiBuildDone] = useState(false);
 
   useEffect(() => {
-    if (!autoPlay) return;
-    const client = aiClientRef.current;
-    if (!client) return;
-    if (!publicState) return;
-    if (publicState.phase === GamePhase.Finished) return;
+    if (state.phase !== 'AI_BUILD') return;
+    setAiBuildDone(false);
+    const maze = generateAIMaze(state.difficulty!);
+    const t = window.setTimeout(() => {
+      setAiBuildDone(true);
+      dispatch({ type: 'AI_READY', maze });
+    }, 1800);
+    return () => window.clearTimeout(t);
+  }, [state.phase, state.difficulty]);
 
-    const requestGen = ++aiRequestGenerationRef.current;
-    const timer = window.setTimeout(() => {
-      const player = publicState.currentPlayer;
-      const from = publicState.tokenPositions[player];
-      const goal = publicState.opponentGoal[player];
+  if (state.phase === 'BUILD_P1') {
+    return (
+      <MazeBuilder
+        owner="Player"
+        onComplete={(m) => dispatch({ type: 'SUBMIT_MAZE_P1', maze: m })}
+        onBack={() => navigate('/')}
+      />
+    );
+  }
 
-      client
-        .getNextDirection(from, goal, resolvedDifficulty, false)
-        .then((dir) => {
-          if (requestGen !== aiRequestGenerationRef.current) return;
-          stepOnce(player, dir);
-        })
-        .catch((e) => console.error(e));
-    }, 200);
+  if (state.phase === 'AI_BUILD') {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-6">
+        <Loader2 className="text-primary h-12 w-12 animate-spin" />
+        <h2 className="neon-text text-primary text-xl font-bold">AI가 미로를 제작 중...</h2>
+        <p className="text-muted-foreground text-sm">
+          {aiBuildDone ? '완료!' : '벽을 배치하고 있습니다'}
+        </p>
+      </div>
+    );
+  }
 
-    return () => window.clearTimeout(timer);
-  }, [autoPlay, publicState, resolvedDifficulty, stepOnce]);
+  if (state.phase === 'WIN') {
+    return (
+      <WinScreen
+        winner={state.winner!}
+        mode={state.mode!}
+        mazes={state.mazes}
+        onRestart={() => navigate('/')}
+      />
+    );
+  }
 
   return (
-    <div className="min-h-dvh">
-      <PageHeader />
-      <div className="mx-auto flex max-w-3xl flex-col gap-4 p-6">
-        <div className="card">
-          <div className="mb-2 flex items-center justify-between gap-3">
-            <h2 className="text-xl font-bold">싱글(Worker AI) 데모</h2>
-            <Button variant="outline" onClick={reset}>
-              리셋
-            </Button>
-          </div>
-          <p className="text-muted-foreground text-sm">
-            Maze Crack 엔진(턴/벽 판정/승리)을 사용해 Worker가 방향을 추천하는 데모입니다.
-          </p>
-          <div className="mt-4 grid gap-2 text-sm">
-            <div>
-              <span className="text-muted-foreground">난이도:</span> {resolvedDifficulty}
-            </div>
-            <div>
-              <span className="text-muted-foreground">publicState:</span>{' '}
-              {publicState ? JSON.stringify(publicState) : '-'}
-            </div>
-            <div>
-              <span className="text-muted-foreground">lastTurn:</span>{' '}
-              {lastTurn ? JSON.stringify(lastTurn) : '-'}
-            </div>
-          </div>
-        </div>
-
-        <div className="card flex flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <Button onClick={() => setAutoPlay((v) => !v)}>
-              {autoPlay ? '자동 멈춤' : '자동 시작'}
-            </Button>
-            <Button variant="secondary" onClick={() => publicState && stepOnce(publicState.currentPlayer, Direction.Up)} disabled={autoPlay}>
-              위
-            </Button>
-            <Button variant="secondary" onClick={() => publicState && stepOnce(publicState.currentPlayer, Direction.Down)} disabled={autoPlay}>
-              아래
-            </Button>
-            <Button variant="secondary" onClick={() => publicState && stepOnce(publicState.currentPlayer, Direction.Left)} disabled={autoPlay}>
-              왼쪽
-            </Button>
-            <Button variant="secondary" onClick={() => publicState && stepOnce(publicState.currentPlayer, Direction.Right)} disabled={autoPlay}>
-              오른쪽
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <GameScreen
+      state={state}
+      onMove={(d) => dispatch({ type: 'MOVE', direction: d })}
+      onHome={() => navigate('/')}
+      onConfirmWallHit={() => dispatch({ type: 'CONFIRM_WALL_HIT' })}
+    />
   );
 }

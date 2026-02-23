@@ -2,7 +2,18 @@ declare const _default: {
     darkMode: string[];
     content: string[];
     theme: {
+        container: {
+            center: boolean;
+            padding: string;
+            screens: {
+                '2xl': string;
+            };
+        };
         extend: {
+            fontFamily: {
+                display: string[];
+                mono: string[];
+            };
             colors: {
                 border: string;
                 input: string;
@@ -36,6 +47,16 @@ declare const _default: {
                 destructive: {
                     DEFAULT: string;
                     foreground: string;
+                };
+                sidebar: {
+                    DEFAULT: string;
+                    foreground: string;
+                    primary: string;
+                    'primary-foreground': string;
+                    accent: string;
+                    'accent-foreground': string;
+                    border: string;
+                    ring: string;
                 };
             };
             borderRadius: {

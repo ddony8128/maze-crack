@@ -1,76 +1,198 @@
-import { useMemo, useState } from 'react';
-import { PageHeader } from '@/components/PageHeader';
-import { Button } from '@/components/ui/button';
-import { MazeCrackGame } from '@/engine/game';
-import {
-  Col,
+import { useReducer } from 'react';
+import { useNavigate } from 'react-router-dom';
+import type {
   Direction,
-  PlayerId,
-  Row,
-  type Cell,
-  type PublicGameState,
-  type TurnResult,
-} from '@/engine/types';
+  GamePhase,
+  GameState,
+  LogEntry,
+  Maze,
+  Player,
+  Position,
+} from '@/types/game';
+import { applyDirection, inBounds, makeWallKey, posKey } from '@/utils/maze';
+import MazeBuilder from '@/components/game/MazeBuilder';
+import GameScreen from '@/components/game/GameScreen';
+import { PassScreen, WinScreen } from '@/components/game/Screens';
 
 export function TwoPlayerPage() {
-  const game = useMemo(() => {
-    const cell = (row: Row, col: Col): Cell => ({ row, col });
-    return new MazeCrackGame({
-      p1Maze: { start: cell(Row.B, Col.C2), goal: cell(Row.E, Col.C5), walls: [] },
-      p2Maze: { start: cell(Row.A, Col.C1), goal: cell(Row.E, Col.C1), walls: [] },
-      startingPlayer: PlayerId.P1,
-    });
-  }, []);
+  const navigate = useNavigate();
 
-  const [publicState, setPublicState] = useState<PublicGameState>(game.getPublicState());
-  const [lastTurn, setLastTurn] = useState<TurnResult | null>(null);
-
-  const stepOnce = (direction: Direction) => {
-    try {
-      const result = game.applyTurn(publicState.currentPlayer, direction);
-      setLastTurn(result);
-      setPublicState(game.getPublicState());
-    } catch (e) {
-      console.error(e);
-    }
+  const initialState: GameState = {
+    mode: 'PVP',
+    phase: 'BUILD_P1',
+    difficulty: null,
+    mazes: [null, null],
+    positions: [null, null],
+    currentTurn: 'P1',
+    discoveredWalls: [[], []],
+    visited: [[], []],
+    log: [],
+    winner: null,
+    tutorialStep: 0,
+    wallHitPending: false,
   };
 
-  return (
-    <div className="min-h-dvh">
-      <PageHeader />
-      <div className="mx-auto flex max-w-3xl flex-col gap-4 p-6">
-        <div className="card">
-          <h2 className="mb-2 text-xl font-bold">둘이 하기(임시)</h2>
-          <p className="text-muted-foreground text-sm">
-            실제 2인 UX는 이후 교체하세요. 현재는 액션을 수동으로 적용하는 데모입니다.
-          </p>
-          <div className="mt-4 grid gap-2 text-sm">
-            <div>
-              <span className="text-muted-foreground">publicState:</span>{' '}
-              {publicState ? JSON.stringify(publicState) : '-'}
-            </div>
-            <div>
-              <span className="text-muted-foreground">lastTurn:</span>{' '}
-              {lastTurn ? JSON.stringify(lastTurn) : '-'}
-            </div>
-          </div>
-        </div>
+  type Action =
+    | { type: 'SUBMIT_MAZE'; maze: Maze }
+    | { type: 'PASS_READY' }
+    | { type: 'MOVE'; direction: Direction }
+    | { type: 'CONFIRM_WALL_HIT' }
+    | { type: 'GO_HOME' };
 
-        <div className="card flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={() => stepOnce(Direction.Up)}>
-            위
-          </Button>
-          <Button variant="secondary" onClick={() => stepOnce(Direction.Down)}>
-            아래
-          </Button>
-          <Button variant="secondary" onClick={() => stepOnce(Direction.Left)}>
-            왼쪽
-          </Button>
-          <Button variant="secondary" onClick={() => stepOnce(Direction.Right)}>
-            오른쪽
-          </Button>
-        </div>
-      </div>
-    </div>
+  function startPlay(mazes: [Maze | null, Maze | null]): Partial<GameState> {
+    const p1OpponentMaze = mazes[1]!;
+    const p2OpponentMaze = mazes[0]!;
+    return {
+      mazes,
+      phase: 'PLAY' as GamePhase,
+      currentTurn: 'P1' as Player,
+      positions: [p1OpponentMaze.start, p2OpponentMaze.start],
+      visited: [[posKey(p1OpponentMaze.start)], [posKey(p2OpponentMaze.start)]],
+      discoveredWalls: [[], []],
+      log: [],
+      winner: null,
+      wallHitPending: false,
+    };
+  }
+
+  function reducer(state: GameState, action: Action): GameState {
+    switch (action.type) {
+      case 'SUBMIT_MAZE': {
+        if (state.phase === 'BUILD_P1') {
+          const mazes: [Maze | null, Maze | null] = [action.maze, state.mazes[1]];
+          return { ...state, mazes, phase: 'PASS' };
+        }
+        if (state.phase === 'BUILD_P2') {
+          const mazes: [Maze | null, Maze | null] = [state.mazes[0], action.maze];
+          return { ...state, ...startPlay(mazes) };
+        }
+        return state;
+      }
+      case 'PASS_READY':
+        return { ...state, phase: 'BUILD_P2' };
+      case 'MOVE': {
+        if (state.wallHitPending) return state;
+        if (state.phase !== 'PLAY') return state;
+
+        const isP1 = state.currentTurn === 'P1';
+        const idx = isP1 ? 0 : 1;
+        const mazeIdx = isP1 ? 1 : 0;
+        const maze = state.mazes[mazeIdx]!;
+        const pos = state.positions[idx]!;
+        const np = applyDirection(pos, action.direction);
+        const playerLabel = state.currentTurn;
+
+        const logEntryFail: LogEntry = {
+          player: playerLabel,
+          direction: action.direction,
+          success: false,
+          position: pos,
+        };
+
+        if (!inBounds(np)) {
+          return { ...state, wallHitPending: true, log: [...state.log, logEntryFail] };
+        }
+
+        const wk = makeWallKey(pos, np);
+        if (maze.walls.includes(wk)) {
+          const dw: [string[], string[]] = [
+            idx === 0
+              ? state.discoveredWalls[0].includes(wk)
+                ? state.discoveredWalls[0]
+                : [...state.discoveredWalls[0], wk]
+              : state.discoveredWalls[0],
+            idx === 1
+              ? state.discoveredWalls[1].includes(wk)
+                ? state.discoveredWalls[1]
+                : [...state.discoveredWalls[1], wk]
+              : state.discoveredWalls[1],
+          ];
+          return {
+            ...state,
+            discoveredWalls: dw,
+            wallHitPending: true,
+            log: [...state.log, logEntryFail],
+          };
+        }
+
+        const newPositions: [Position | null, Position | null] = [
+          state.positions[0],
+          state.positions[1],
+        ];
+        newPositions[idx] = np;
+
+        const newVisited: [string[], string[]] = [state.visited[0], state.visited[1]];
+        newVisited[idx] = [...newVisited[idx], posKey(np)];
+
+        const isWin = np.row === maze.goal.row && np.col === maze.goal.col;
+
+        const logEntryOk: LogEntry = {
+          player: playerLabel,
+          direction: action.direction,
+          success: true,
+          position: np,
+        };
+
+        return {
+          ...state,
+          positions: newPositions,
+          visited: newVisited,
+          winner: isWin ? state.currentTurn : null,
+          phase: isWin ? 'WIN' : 'PLAY',
+          log: [...state.log, logEntryOk],
+        };
+      }
+      case 'CONFIRM_WALL_HIT': {
+        const isP1 = state.currentTurn === 'P1';
+        return { ...state, wallHitPending: false, currentTurn: isP1 ? 'P2' : 'P1' };
+      }
+      case 'GO_HOME':
+        return { ...initialState };
+      default:
+        return state;
+    }
+  }
+
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  if (state.phase === 'BUILD_P1') {
+    return (
+      <MazeBuilder
+        owner="P1"
+        onComplete={(m) => dispatch({ type: 'SUBMIT_MAZE', maze: m })}
+        onBack={() => navigate('/')}
+      />
+    );
+  }
+  if (state.phase === 'PASS') {
+    return <PassScreen onReady={() => dispatch({ type: 'PASS_READY' })} />;
+  }
+  if (state.phase === 'BUILD_P2') {
+    return (
+      <MazeBuilder
+        owner="P2"
+        onComplete={(m) => dispatch({ type: 'SUBMIT_MAZE', maze: m })}
+        onBack={() => navigate('/')}
+      />
+    );
+  }
+  if (state.phase === 'WIN') {
+    return (
+      <WinScreen
+        winner={state.winner!}
+        mode={state.mode!}
+        mazes={state.mazes}
+        onRestart={() => navigate('/')}
+      />
+    );
+  }
+
+  return (
+    <GameScreen
+      state={state}
+      onMove={(d) => dispatch({ type: 'MOVE', direction: d })}
+      onHome={() => navigate('/')}
+      onConfirmWallHit={() => dispatch({ type: 'CONFIRM_WALL_HIT' })}
+    />
   );
 }
