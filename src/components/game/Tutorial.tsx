@@ -76,21 +76,19 @@ function StepDemo({ step }: { step: number }) {
     case 0:
       return (
         <TutorialOverlay text="모드를 선택하는 홈 화면입니다.">
-          <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-6">
+          <div className="flex min-h-dvh flex-col items-center justify-center gap-6 p-5 sm:p-8">
             <div className="text-center">
-              <h1 className="neon-text text-primary mb-2 text-4xl font-bold tracking-tight">
-                MAZE CRACK
-              </h1>
+              <h1 className="game-title mb-2">MAZE CRACK</h1>
               <p className="text-muted-foreground text-sm">미로 해독</p>
             </div>
             <div className="flex w-full max-w-xs flex-col gap-3">
-              <Button variant="outline" size="lg" className="h-14 justify-center">
+              <Button variant="outline" size="lg" className="justify-center">
                 2인 대전
               </Button>
-              <Button variant="outline" size="lg" className="h-14 justify-center">
+              <Button variant="outline" size="lg" className="justify-center">
                 1인 PvE
               </Button>
-              <Button variant="outline" size="lg" className="h-14 justify-center">
+              <Button variant="outline" size="lg" className="justify-center">
                 튜토리얼
               </Button>
             </div>
@@ -99,15 +97,19 @@ function StepDemo({ step }: { step: number }) {
       );
     case 1:
       return (
-        <div className="mx-auto w-full max-w-sm">
-          <p className="text-muted-foreground mb-2 text-center text-xs">S와 G를 배치한 예시</p>
+        <div className="mx-auto w-full max-w-[min(92vw,28rem)]">
+          <p className="text-muted-foreground mb-2 text-center text-[clamp(0.72rem,2.8vw,0.8rem)]">
+            S와 G를 배치한 예시
+          </p>
           <MazeGrid walls={[]} start={EXAMPLE_START} goal={EXAMPLE_GOAL} />
         </div>
       );
     case 2:
       return (
-        <div className="mx-auto w-full max-w-sm">
-          <p className="text-muted-foreground mb-2 text-center text-xs">벽이 설치된 미로 예시</p>
+        <div className="mx-auto w-full max-w-[min(92vw,28rem)]">
+          <p className="text-muted-foreground mb-2 text-center text-[clamp(0.72rem,2.8vw,0.8rem)]">
+            벽이 설치된 미로 예시
+          </p>
           <MazeGrid walls={EXAMPLE_WALLS} start={EXAMPLE_START} goal={EXAMPLE_GOAL} />
         </div>
       );
@@ -119,8 +121,8 @@ function StepDemo({ step }: { step: number }) {
       );
     case 4:
       return (
-        <div className="mx-auto w-full max-w-sm">
-          <p className="text-muted-foreground mb-2 text-center text-xs">
+        <div className="mx-auto w-full max-w-[min(92vw,28rem)]">
+          <p className="text-muted-foreground mb-2 text-center text-[clamp(0.72rem,2.8vw,0.8rem)]">
             탐색 중인 보드 (발견한 벽만 표시)
           </p>
           <MazeGrid
@@ -134,8 +136,8 @@ function StepDemo({ step }: { step: number }) {
       );
     case 5:
       return (
-        <div className="mx-auto w-full max-w-sm">
-          <p className="text-muted-foreground mb-2 text-center text-xs">
+        <div className="mx-auto w-full max-w-[min(92vw,28rem)]">
+          <p className="text-muted-foreground mb-2 text-center text-[clamp(0.72rem,2.8vw,0.8rem)]">
             오른쪽으로 이동 시도 → 벽 발견!
           </p>
           <MazeGrid
@@ -145,15 +147,17 @@ function StepDemo({ step }: { step: number }) {
             playerPos={WALL_HIT_PLAYER}
             visitedCells={['0,0', '1,0', '1,1']}
           />
-          <p className="text-destructive mt-2 text-center text-xs font-bold">
+          <p className="text-destructive mt-2 text-center text-[clamp(0.72rem,2.8vw,0.8rem)] font-bold">
             🚧 벽에 부딪혔습니다! → 턴 종료
           </p>
         </div>
       );
     case 6:
       return (
-        <div className="mx-auto w-full max-w-sm">
-          <p className="text-muted-foreground mb-2 text-center text-xs">Goal에 도달!</p>
+        <div className="mx-auto w-full max-w-[min(92vw,28rem)]">
+          <p className="text-muted-foreground mb-2 text-center text-[clamp(0.72rem,2.8vw,0.8rem)]">
+            Goal에 도달!
+          </p>
           <MazeGrid
             walls={EXAMPLE_WALLS}
             start={EXAMPLE_START}
@@ -180,7 +184,7 @@ export default function Tutorial({
   const s = steps[Math.min(step, steps.length - 1)]!;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 p-5 sm:p-8">
       <div className="flex gap-1.5">
         {steps.map((_, i) => (
           <div
@@ -191,9 +195,11 @@ export default function Tutorial({
       </div>
 
       <div className="text-center" key={step}>
-        <p className="mb-2 text-4xl">{s.icon}</p>
-        <h2 className="text-primary mb-2 text-2xl font-bold">{s.title}</h2>
-        <p className="text-muted-foreground mx-auto max-w-xs text-sm leading-relaxed whitespace-pre-line">
+        <p className="mb-2 text-[clamp(2rem,9vw,2.75rem)]">{s.icon}</p>
+        <h2 className="text-primary mb-2 text-[clamp(1.25rem,5vw,1.75rem)] font-bold">
+          {s.title}
+        </h2>
+        <p className="text-muted-foreground mx-auto max-w-xs text-[clamp(0.85rem,3.2vw,0.95rem)] leading-relaxed whitespace-pre-line">
           {s.desc}
         </p>
       </div>

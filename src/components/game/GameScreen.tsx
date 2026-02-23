@@ -35,6 +35,7 @@ export default function GameScreen({ state, onMove, onHome, onConfirmWallHit }: 
   const inputEnabled = !isAITurn && !wallHitPending;
   const turnLabel = mode === 'PVE' ? (isP1 ? 'Player' : 'AI') : currentTurn;
   const logRef = useRef<HTMLDivElement>(null);
+  const controlSize = 'clamp(44px, 14vw, 56px)';
 
   useEffect(() => {
     if (isAITurn && state.phase === 'PLAY' && !wallHitPending) {
@@ -84,28 +85,46 @@ export default function GameScreen({ state, onMove, onHome, onConfirmWallHit }: 
   }, [handleKeyDown]);
 
   const dirButtons: { dir: Direction; icon: React.ReactNode; area: string }[] = [
-    { dir: 'UP', icon: <ArrowUp className="h-6 w-6" />, area: 'up' },
-    { dir: 'LEFT', icon: <ArrowLeft className="h-6 w-6" />, area: 'left' },
-    { dir: 'RIGHT', icon: <ArrowRight className="h-6 w-6" />, area: 'right' },
-    { dir: 'DOWN', icon: <ArrowDown className="h-6 w-6" />, area: 'down' },
+    {
+      dir: 'UP',
+      icon: <ArrowUp className="h-[clamp(1.1rem,4.5vw,1.5rem)] w-[clamp(1.1rem,4.5vw,1.5rem)]" />,
+      area: 'up',
+    },
+    {
+      dir: 'LEFT',
+      icon: <ArrowLeft className="h-[clamp(1.1rem,4.5vw,1.5rem)] w-[clamp(1.1rem,4.5vw,1.5rem)]" />,
+      area: 'left',
+    },
+    {
+      dir: 'RIGHT',
+      icon: <ArrowRight className="h-[clamp(1.1rem,4.5vw,1.5rem)] w-[clamp(1.1rem,4.5vw,1.5rem)]" />,
+      area: 'right',
+    },
+    {
+      dir: 'DOWN',
+      icon: <ArrowDown className="h-[clamp(1.1rem,4.5vw,1.5rem)] w-[clamp(1.1rem,4.5vw,1.5rem)]" />,
+      area: 'down',
+    },
   ];
 
   return (
-    <div className="flex min-h-screen flex-col items-center gap-3 p-4">
-      <div className="flex w-full max-w-sm items-center justify-between">
+    <div className="flex min-h-dvh flex-col items-center gap-3 p-3 sm:p-4">
+      <div className="flex w-full max-w-[min(92vw,28rem)] items-center justify-between">
         <Button variant="ghost" size="icon" onClick={onHome} className="text-muted-foreground">
           <Home className="h-4 w-4" />
         </Button>
         <div className="text-center">
           <span
             className={cn(
-              'neon-text text-lg font-bold',
+              'neon-text text-[clamp(1rem,4.2vw,1.25rem)] font-bold',
               isP1 ? 'text-primary' : 'text-accent neon-text-accent',
             )}
           >
             {turnLabel}의 턴
           </span>
-          <span className="text-muted-foreground ml-2 text-xs">#{log.length + 1}</span>
+          <span className="text-muted-foreground ml-2 text-[clamp(0.7rem,2.6vw,0.8rem)]">
+            #{log.length + 1}
+          </span>
         </div>
         <div className="w-8" />
       </div>
@@ -138,7 +157,7 @@ export default function GameScreen({ state, onMove, onHome, onConfirmWallHit }: 
         visitedCells={visited[idx]}
       />
 
-      <p className="text-muted-foreground font-mono-game text-xs">
+      <p className="text-muted-foreground font-mono-game text-[clamp(0.72rem,2.8vw,0.8rem)]">
         위치: {posLabel(pos)} → 목표: {posLabel(maze.goal)}
       </p>
 
@@ -146,8 +165,8 @@ export default function GameScreen({ state, onMove, onHome, onConfirmWallHit }: 
         className="grid w-fit gap-2"
         style={{
           gridTemplateAreas: '". up ." "left . right" ". down ."',
-          gridTemplateColumns: '56px 56px 56px',
-          gridTemplateRows: '56px 56px 56px',
+          gridTemplateColumns: `${controlSize} ${controlSize} ${controlSize}`,
+          gridTemplateRows: `${controlSize} ${controlSize} ${controlSize}`,
         }}
       >
         {dirButtons.map(({ dir, icon, area }) => (
@@ -156,7 +175,7 @@ export default function GameScreen({ state, onMove, onHome, onConfirmWallHit }: 
             variant="outline"
             disabled={!inputEnabled}
             className={cn(
-              'border-primary/30 text-primary hover:border-primary/60 hover:bg-primary/10 h-14 w-14 p-0 disabled:opacity-30',
+              'border-primary/30 text-primary hover:border-primary/60 hover:bg-primary/10 h-full w-full p-0 disabled:opacity-30',
             )}
             style={{ gridArea: area }}
             onClick={() => (inputEnabled ? onMove(dir) : undefined)}
@@ -168,7 +187,7 @@ export default function GameScreen({ state, onMove, onHome, onConfirmWallHit }: 
 
       <div
         ref={logRef}
-        className="bg-card border-border font-mono-game h-28 w-full max-w-sm overflow-y-auto rounded-lg border p-2 text-xs"
+        className="bg-card border-border font-mono-game h-[clamp(6rem,18vh,8.5rem)] w-full max-w-[min(92vw,28rem)] overflow-y-auto rounded-lg border p-2 text-[clamp(0.72rem,2.8vw,0.8rem)] sm:p-3"
       >
         {log.length === 0 ? (
           <p className="text-muted-foreground">이동 로그가 여기에 표시됩니다</p>

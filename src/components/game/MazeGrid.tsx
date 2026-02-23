@@ -20,8 +20,10 @@ interface MazeGridProps {
 
 const GRID_STYLE: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: '1fr 7px 1fr 7px 1fr 7px 1fr 7px 1fr',
-  gridTemplateRows: '1fr 7px 1fr 7px 1fr 7px 1fr 7px 1fr',
+  gridTemplateColumns:
+    'var(--mc-cell) var(--mc-wall) var(--mc-cell) var(--mc-wall) var(--mc-cell) var(--mc-wall) var(--mc-cell) var(--mc-wall) var(--mc-cell)',
+  gridTemplateRows:
+    'var(--mc-cell) var(--mc-wall) var(--mc-cell) var(--mc-wall) var(--mc-cell) var(--mc-wall) var(--mc-cell) var(--mc-wall) var(--mc-cell)',
 };
 
 export default function MazeGrid({
@@ -85,7 +87,7 @@ export default function MazeGrid({
           <div
             key={key}
             className={cn(
-              'flex items-center justify-center rounded-sm font-mono text-xs font-bold transition-all duration-200 select-none',
+              'flex items-center justify-center rounded-sm font-mono text-[clamp(0.65rem,2.6vw,0.8rem)] font-bold transition-all duration-200 select-none',
               isP
                 ? 'bg-primary neon-glow text-primary-foreground z-10'
                 : isG
@@ -154,9 +156,18 @@ export default function MazeGrid({
     <div
       className={cn(
         'border-primary/20 aspect-square w-full overflow-hidden rounded-lg border-2',
-        compact ? 'max-w-[180px]' : 'max-w-[340px]',
+        compact
+          ? 'max-w-[min(56vw,220px)] sm:max-w-[min(40vw,240px)]'
+          : 'max-w-[min(92vw,420px)] sm:max-w-[min(80vw,460px)]',
         'mx-auto',
       )}
+      style={
+        {
+          '--mc-wall': compact ? 'clamp(3px, 1.2vw, 6px)' : 'clamp(4px, 1.6vw, 7px)',
+          // 그리드가 컨테이너를 꽉 채우도록 셀 크기는 % 기반으로 산출한다.
+          '--mc-cell': 'calc((100% - (4 * var(--mc-wall))) / 5)',
+        } as React.CSSProperties
+      }
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
     >

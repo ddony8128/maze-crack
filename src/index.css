@@ -78,16 +78,16 @@
   }
 
   .btn--size-default {
-    @apply h-10 px-4 py-2;
+    @apply h-10 px-4 py-2 sm:h-11 sm:px-5;
   }
   .btn--size-sm {
-    @apply h-9 rounded-md px-3;
+    @apply h-9 rounded-md px-3 sm:h-10 sm:px-4;
   }
   .btn--size-lg {
-    @apply h-11 rounded-md px-8;
+    @apply h-11 rounded-md px-7 text-base sm:h-12 sm:px-10 sm:text-lg;
   }
   .btn--size-icon {
-    @apply h-10 w-10;
+    @apply h-10 w-10 sm:h-11 sm:w-11;
   }
 
   .btn-primary {
@@ -95,7 +95,33 @@
   }
 
   .btn-menu {
-    @apply bg-secondary text-foreground border-border hover:border-primary hover:bg-primary/15 inline-flex w-full items-center justify-center rounded-lg border px-6 py-4 text-lg font-semibold transition active:scale-95;
+    @apply relative w-full overflow-hidden rounded-lg font-semibold transition-all duration-300;
+    @apply px-5 py-3 text-base sm:px-8 sm:py-5 sm:text-xl;
+    @apply bg-secondary text-foreground border-border border;
+    @apply active:scale-95;
+  }
+
+  .btn-menu::before {
+    content: '';
+    pointer-events: none;
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .btn-menu:hover {
+      @apply border-primary bg-primary/15;
+    }
+    .btn-menu:hover::before {
+      @apply opacity-10;
+    }
+  }
+
+  .game-title {
+    font-size: clamp(2.25rem, 7vw, 3.75rem);
+    @apply text-primary font-extrabold tracking-tight;
+    text-shadow:
+      0 0 10px hsl(185 80% 50% / 0.6),
+      0 0 30px hsl(185 80% 50% / 0.2);
   }
 
   .card {

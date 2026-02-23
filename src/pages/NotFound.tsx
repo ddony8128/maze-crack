@@ -9,10 +9,12 @@ export default function NotFound() {
   }, [location.pathname]);
 
   return (
-    <div className="bg-muted flex min-h-screen items-center justify-center">
+    <div className="bg-muted flex min-h-dvh items-center justify-center p-6">
       <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="text-muted-foreground mb-4 text-xl">Oops! Page not found</p>
+        <h1 className="mb-3 text-[clamp(2.25rem,10vw,3rem)] font-bold">404</h1>
+        <p className="text-muted-foreground mb-5 text-[clamp(1rem,4vw,1.25rem)]">
+          Oops! Page not found
+        </p>
         <a href="/" className="text-primary hover:text-primary/90 underline">
           Return to Home
         </a>

@@ -8,13 +8,15 @@ export function MainMenuPage() {
   const [isSingleOpen, setIsSingleOpen] = useState(false);
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center px-6 py-16">
-      <div className="mb-10 text-center">
-        <h1 className="mb-3 text-5xl font-extrabold tracking-tight">maze-crack</h1>
-        <p className="text-muted-foreground">미로를 “깨는” 게임 엔진/AI 실험장</p>
+    <div className="flex min-h-dvh flex-col items-center justify-center px-5 py-14 sm:px-8 sm:py-20">
+      <div className="mb-10 text-center sm:mb-14">
+        <h1 className="game-title mb-2">maze-crack</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">
+          미로를 “깨는” 게임 엔진/AI 실험장
+        </p>
       </div>
 
-      <div className="flex w-[min(90vw,360px)] flex-col gap-4">
+      <div className="flex w-[clamp(220px,70vw,360px)] flex-col gap-3 sm:gap-4">
         <Button className="btn-menu" onClick={() => navigate('/tutorial')}>
           튜토리얼(임시)
         </Button>
@@ -27,7 +29,7 @@ export function MainMenuPage() {
           <ChevronDown className="h-5 w-5" />
         </Button>
         {isSingleOpen && (
-          <div className="flex flex-col items-center gap-3">
+          <div className="flex flex-col items-center gap-3 sm:gap-4">
             <Button className="btn-menu w-4/5" onClick={() => navigate('/single/easy')}>
               쉬움 <Turtle className="h-5 w-5" />
             </Button>
@@ -42,7 +44,7 @@ export function MainMenuPage() {
         </Button>
       </div>
 
-      <div className="text-muted-foreground mt-10 text-center text-xs">
+      <div className="text-muted-foreground mt-10 text-center text-[clamp(0.7rem,2.6vw,0.8rem)] sm:mt-14">
         엔진/규칙/AI 구조는 이후 `src/engine`에서 교체/확장하세요.
       </div>
     </div>

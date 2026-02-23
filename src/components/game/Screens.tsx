@@ -6,11 +6,13 @@ import MazeGrid from './MazeGrid';
 
 export function PassScreen({ onReady }: { onReady: () => void }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-8 p-6">
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-8 p-5 sm:p-8">
       <div className="text-center">
-        <p className="mb-4 text-5xl">🔒</p>
-        <h2 className="text-foreground mb-2 text-2xl font-bold">기기를 넘겨주세요</h2>
-        <p className="text-muted-foreground">
+        <p className="mb-4 text-[clamp(2.5rem,10vw,3.5rem)]">🔒</p>
+        <h2 className="text-foreground mb-2 text-[clamp(1.25rem,5vw,1.75rem)] font-bold">
+          기기를 넘겨주세요
+        </h2>
+        <p className="text-muted-foreground text-sm sm:text-base">
           P2가 미로를 제작합니다.
           <br />
           P1은 화면을 보지 마세요!
@@ -18,7 +20,7 @@ export function PassScreen({ onReady }: { onReady: () => void }) {
       </div>
       <Button
         size="lg"
-        className="neon-glow bg-primary text-primary-foreground hover:bg-primary/90 h-14 px-10 text-lg"
+        className="neon-glow bg-primary text-primary-foreground hover:bg-primary/90"
         onClick={onReady}
       >
         준비 완료
@@ -45,14 +47,19 @@ export function WinScreen({
   const currentMaze = mazes[viewIdx];
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-6">
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-6 p-5 sm:p-8">
       <div className="animate-float-in text-center">
-        <Trophy className="animate-pulse-glow text-accent mx-auto mb-4 h-16 w-16" />
-        <h2 className="neon-text-accent text-accent mb-2 text-4xl font-bold">{label} 승리!</h2>
-        <p className="text-muted-foreground">축하합니다 🎉</p>
+        <Trophy className="animate-pulse-glow text-accent mx-auto mb-4 h-14 w-14 sm:h-16 sm:w-16" />
+        <h2 className="neon-text-accent text-accent mb-2 text-[clamp(2rem,7vw,2.75rem)] font-bold">
+          {label} 승리!
+        </h2>
+        <p className="text-muted-foreground text-sm sm:text-base">축하합니다 🎉</p>
       </div>
 
-      <div className="animate-float-in w-full max-w-sm" style={{ animationDelay: '0.15s' }}>
+      <div
+        className="animate-float-in w-full max-w-[min(92vw,28rem)]"
+        style={{ animationDelay: '0.15s' }}
+      >
         <div className="mb-3 flex justify-center gap-2">
           {mazeLabels.map((lbl, i) => (
             <Button
