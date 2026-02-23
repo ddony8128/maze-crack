@@ -1,4 +1,4 @@
-import type { Cell, DifficultyLevel, Direction } from '@/engine/types';
+import type { Difficulty, Direction, Position } from '@/engine/types';
 import type { ComputeDirectionRequest, ComputeDirectionResponse } from '@/types/workerMessage';
 
 export class AIWorkerClient {
@@ -10,9 +10,9 @@ export class AIWorkerClient {
   }
 
   async getNextDirection(
-    from: Cell,
-    goal: Cell,
-    difficulty: DifficultyLevel,
+    from: Position,
+    goal: Position,
+    difficulty: Difficulty,
     resetAI: boolean = false,
   ): Promise<Direction> {
     const requestId = this.nextRequestId++;

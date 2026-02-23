@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, Home } from 'lucide-react';
-import { HomeScreen, PassScreen } from './Screens';
+import { PassScreen } from './Screens';
 import MazeGrid from './MazeGrid';
 
 interface TutorialProps {
@@ -76,7 +76,25 @@ function StepDemo({ step }: { step: number }) {
     case 0:
       return (
         <TutorialOverlay text="모드를 선택하는 홈 화면입니다.">
-          <HomeScreen onSelectMode={() => {}} />
+          <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-6">
+            <div className="text-center">
+              <h1 className="neon-text text-primary mb-2 text-4xl font-bold tracking-tight">
+                MAZE CRACK
+              </h1>
+              <p className="text-muted-foreground text-sm">미로 해독</p>
+            </div>
+            <div className="flex w-full max-w-xs flex-col gap-3">
+              <Button variant="outline" size="lg" className="h-14 justify-center">
+                2인 대전
+              </Button>
+              <Button variant="outline" size="lg" className="h-14 justify-center">
+                1인 PvE
+              </Button>
+              <Button variant="outline" size="lg" className="h-14 justify-center">
+                튜토리얼
+              </Button>
+            </div>
+          </div>
         </TutorialOverlay>
       );
     case 1:

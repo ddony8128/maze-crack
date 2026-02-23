@@ -1,131 +1,158 @@
-import type {
-  Cell,
-  Direction,
-  GamePhase,
-  MazeSpec,
-  PlayerId,
-  PublicGameState,
-  TurnResult,
-} from './types';
-import { GamePhase as GamePhaseConst, PlayerId as PlayerIdConst } from './types';
-import { Maze } from './maze';
+import type { Direction, Difficulty, GameMode, MazeSpec, PlayerId, PublicGameState } from './types';
 import { EngineError, EngineErrorCode } from './errors';
-import { isSameCell } from './coord';
+import { isSamePos, posKey } from './coord';
+import { Maze } from './maze';
 
 export type MazeCrackGameConfig = {
+  mode: GameMode;
+  difficulty: Difficulty | null;
   p1Maze: MazeSpec;
   p2Maze: MazeSpec;
   startingPlayer: PlayerId;
 };
 
 function opponentOf(player: PlayerId): PlayerId {
-  return player === PlayerIdConst.P1 ? PlayerIdConst.P2 : PlayerIdConst.P1;
+  return player === 'P1' ? 'P2' : 'P1';
+}
+
+function tokenIndexOf(player: PlayerId): 0 | 1 {
+  return player === 'P1' ? 0 : 1;
+}
+
+function opponentMazeIndexOf(player: PlayerId): 0 | 1 {
+  return player === 'P1' ? 1 : 0;
 }
 
 /**
- * Maze Crack 순수 엔진 (UI/네트워크/저장 등 외부 의존 없음)
+ * Maze Crack 순수 엔진 (UI/저장/네트워크 등 외부 의존 없음)
  *
+ * 규칙(`ui_sample`과 동일):
  * - 각 플레이어는 "상대 미로" 위에서 자신의 토큰을 움직인다.
- * - 이동은 1칸, 벽/경계면 충돌 시 제자리 유지 + 즉시 턴 종료.
- * - 상대의 벽 배치는 외부로 노출하지 않으며, 이동 결과(성공/충돌/좌표)는 공개 가능한 형태로 반환한다.
+ * - 성공적인 이동은 턴을 끝내지 않는다.
+ * - 벽/경계 충돌 시 제자리 유지 + "wallHitPending"가 켜지고, UI 확인 후 턴을 넘긴다.
  */
 export class MazeCrackGame {
-  private readonly mazes: Record<PlayerId, Maze>;
-  private readonly tokenPositions: Record<PlayerId, Cell>;
-  private currentPlayer: PlayerId;
-  private winner: PlayerId | null = null;
-  private phase: GamePhase = GamePhaseConst.InProgress;
-  private turn: number = 0;
-  private readonly history: TurnResult[] = [];
+  private readonly p1Maze: Maze;
+  private readonly p2Maze: Maze;
+  private state: PublicGameState;
 
   constructor(config: MazeCrackGameConfig) {
-    this.mazes = {
-      [PlayerIdConst.P1]: new Maze(config.p1Maze),
-      [PlayerIdConst.P2]: new Maze(config.p2Maze),
-    };
+    this.p1Maze = new Maze(config.p1Maze);
+    this.p2Maze = new Maze(config.p2Maze);
 
-    this.currentPlayer = config.startingPlayer;
+    const p1Pos = { ...this.p2Maze.start };
+    const p2Pos = { ...this.p1Maze.start };
 
-    // 토큰은 "상대 미로 start"에서 시작한다.
-    this.tokenPositions = {
-      [PlayerIdConst.P1]: { ...this.mazes[PlayerIdConst.P2].start },
-      [PlayerIdConst.P2]: { ...this.mazes[PlayerIdConst.P1].start },
+    this.state = {
+      mode: config.mode,
+      difficulty: config.difficulty,
+      phase: 'PLAY',
+      mazes: [config.p1Maze, config.p2Maze],
+      positions: [p1Pos, p2Pos],
+      currentTurn: config.startingPlayer,
+      discoveredWalls: [[], []],
+      visited: [[posKey(p1Pos)], [posKey(p2Pos)]],
+      log: [],
+      winner: null,
+      wallHitPending: false,
     };
   }
 
   getPublicState(): PublicGameState {
     return {
-      phase: this.phase,
-      currentPlayer: this.currentPlayer,
-      winner: this.winner,
-      tokenPositions: {
-        [PlayerIdConst.P1]: { ...this.tokenPositions[PlayerIdConst.P1] },
-        [PlayerIdConst.P2]: { ...this.tokenPositions[PlayerIdConst.P2] },
-      },
-      opponentStart: {
-        [PlayerIdConst.P1]: { ...this.mazes[PlayerIdConst.P2].start },
-        [PlayerIdConst.P2]: { ...this.mazes[PlayerIdConst.P1].start },
-      },
-      opponentGoal: {
-        [PlayerIdConst.P1]: { ...this.mazes[PlayerIdConst.P2].goal },
-        [PlayerIdConst.P2]: { ...this.mazes[PlayerIdConst.P1].goal },
-      },
-      turn: this.turn,
+      ...this.state,
+      mazes: [{ ...this.state.mazes[0] }, { ...this.state.mazes[1] }],
+      positions: [{ ...this.state.positions[0] }, { ...this.state.positions[1] }],
+      discoveredWalls: [[...this.state.discoveredWalls[0]], [...this.state.discoveredWalls[1]]],
+      visited: [[...this.state.visited[0]], [...this.state.visited[1]]],
+      log: [...this.state.log],
     };
   }
 
-  getHistory(): TurnResult[] {
-    return [...this.history];
-  }
-
-  applyTurn(player: PlayerId, direction: Direction): TurnResult {
-    if (this.phase === GamePhaseConst.Finished) {
+  /**
+   * 현재 턴 플레이어의 이동을 적용한다.
+   * 성공 시에는 턴이 유지된다.
+   * 충돌 시에는 wallHitPending=true가 되고, UI에서 confirmWallHit를 호출해야 턴이 넘어간다.
+   */
+  move(direction: Direction): PublicGameState {
+    if (this.state.phase === 'WIN') {
       throw new EngineError(EngineErrorCode.GameFinished, 'game already finished');
     }
-    if (player !== this.currentPlayer) {
-      throw new EngineError(EngineErrorCode.NotYourTurn, 'not your turn');
+    if (this.state.wallHitPending) {
+      return this.getPublicState();
     }
 
-    const defendingMazeOwner = opponentOf(player);
-    const maze = this.mazes[defendingMazeOwner];
+    const player = this.state.currentTurn;
+    const idx = tokenIndexOf(player);
+    const oppMazeIdx = opponentMazeIndexOf(player);
+    const maze = oppMazeIdx === 0 ? this.p1Maze : this.p2Maze;
 
-    const from = this.tokenPositions[player];
-    const { to, barrier } = maze.canMove(from, direction);
+    const from = this.state.positions[idx];
+    const { to, barrier, wallKey } = maze.canMove(from, direction);
 
-    const moved = barrier === null && !isSameCell(from, to);
-    if (moved) {
-      this.tokenPositions[player] = { ...to };
+    const playerLabel =
+      this.state.mode === 'PVE' ? (player === 'P1' ? 'Player' : 'AI') : (player as string);
+
+    if (barrier !== null) {
+      if (barrier === 'wall' && wallKey) {
+        const known = this.state.discoveredWalls[idx];
+        if (!known.includes(wallKey)) {
+          const dw: [string[], string[]] = [
+            idx === 0 ? [...known, wallKey] : this.state.discoveredWalls[0],
+            idx === 1 ? [...known, wallKey] : this.state.discoveredWalls[1],
+          ];
+          this.state = { ...this.state, discoveredWalls: dw };
+        }
+      }
+
+      this.state = {
+        ...this.state,
+        wallHitPending: true,
+        log: [
+          ...this.state.log,
+          { player: playerLabel, direction, success: false, position: { ...from } },
+        ],
+      };
+
+      return this.getPublicState();
     }
 
-    this.turn += 1;
+    const newPositions: [typeof from, typeof from] = [
+      { ...this.state.positions[0] },
+      { ...this.state.positions[1] },
+    ];
+    newPositions[idx] = { ...to };
 
-    const goal = maze.goal;
-    const didWin = isSameCell(this.tokenPositions[player], goal);
-    if (didWin) {
-      this.phase = GamePhaseConst.Finished;
-      this.winner = player;
-    }
+    const newVisited: [string[], string[]] = [this.state.visited[0], this.state.visited[1]];
+    newVisited[idx] = [...newVisited[idx], posKey(to)];
 
-    const nextPlayer = didWin ? this.currentPlayer : opponentOf(this.currentPlayer);
-    if (!didWin) {
-      this.currentPlayer = nextPlayer;
-    }
+    const goal = (oppMazeIdx === 0 ? this.p1Maze : this.p2Maze).goal;
+    const didWin = isSamePos(to, goal);
 
-    const result: TurnResult = {
-      turn: this.turn,
-      player,
-      direction,
-      from: { ...from },
-      to: { ...(moved ? this.tokenPositions[player] : from) },
-      moved,
-      hitBarrier: barrier !== null,
-      barrier,
-      nextPlayer: didWin ? player : this.currentPlayer,
-      didWin,
-      winner: this.winner,
+    this.state = {
+      ...this.state,
+      positions: newPositions,
+      visited: newVisited,
+      phase: didWin ? 'WIN' : 'PLAY',
+      winner: didWin ? player : null,
+      log: [
+        ...this.state.log,
+        { player: playerLabel, direction, success: true, position: { ...to } },
+      ],
     };
 
-    this.history.push(result);
-    return result;
+    return this.getPublicState();
+  }
+
+  confirmWallHit(): PublicGameState {
+    if (this.state.phase !== 'PLAY') return this.getPublicState();
+    if (!this.state.wallHitPending) return this.getPublicState();
+
+    this.state = {
+      ...this.state,
+      wallHitPending: false,
+      currentTurn: opponentOf(this.state.currentTurn),
+    };
+    return this.getPublicState();
   }
 }

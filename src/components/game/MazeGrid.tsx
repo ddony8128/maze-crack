@@ -1,10 +1,12 @@
 import { useCallback, useState } from 'react';
-import type { BuilderTool, Position } from '@/types/game';
-import { makeWallKey, posKey } from '@/utils/maze';
+import type { BuilderTool } from '@/types/game';
+import type { Position, WallKey } from '@/engine/types';
+import { posKey } from '@/engine/coord';
+import { makeWallKey } from '@/engine/maze';
 import { cn } from '@/lib/utils';
 
 interface MazeGridProps {
-  walls: string[];
+  walls: WallKey[];
   start: Position | null;
   goal: Position | null;
   playerPos?: Position | null;
@@ -12,7 +14,7 @@ interface MazeGridProps {
   editable?: boolean;
   activeTool?: BuilderTool;
   onCellClick?: (pos: Position) => void;
-  onWallToggle?: (wallKey: string) => void;
+  onWallToggle?: (wallKey: WallKey) => void;
   compact?: boolean;
 }
 

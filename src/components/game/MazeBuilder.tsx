@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import type { BuilderTool, Maze, Position } from '@/types/game';
-import { hasPath } from '@/utils/maze';
+import type { BuilderTool } from '@/types/game';
+import type { MazeSpec, Position } from '@/engine/types';
+import { hasPath } from '@/engine/maze';
 import MazeGrid from './MazeGrid';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Check, Fence, Flag, MapPin } from 'lucide-react';
@@ -8,7 +9,7 @@ import { cn } from '@/lib/utils';
 
 interface MazeBuilderProps {
   owner: string;
-  onComplete: (maze: Maze) => void;
+  onComplete: (maze: MazeSpec) => void;
   onBack?: () => void;
 }
 

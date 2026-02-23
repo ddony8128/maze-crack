@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef } from 'react';
-import type { Direction, GameState } from '@/types/game';
-import { DIR_LABELS, aiChooseDirection, posLabel } from '@/utils/maze';
+import type { Direction, PublicGameState } from '@/engine/types';
+import { aiChooseDirection } from '@/engine/ai';
+import { DIR_LABELS, posLabel } from '@/engine/coord';
 import MazeGrid from './MazeGrid';
 import { Button } from '@/components/ui/button';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface GameScreenProps {
-  state: GameState;
+  state: PublicGameState;
   onMove: (dir: Direction) => void;
   onHome: () => void;
   onConfirmWallHit: () => void;

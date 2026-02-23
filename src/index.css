@@ -51,6 +51,45 @@
 }
 
 @layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    @apply disabled:pointer-events-none disabled:opacity-50;
+    @apply [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0;
+  }
+
+  .btn--variant-default {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+  .btn--variant-destructive {
+    @apply bg-destructive text-destructive-foreground hover:bg-destructive/90;
+  }
+  .btn--variant-outline {
+    @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+  }
+  .btn--variant-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+  .btn--variant-ghost {
+    @apply hover:bg-accent hover:text-accent-foreground;
+  }
+  .btn--variant-link {
+    @apply text-primary underline-offset-4 hover:underline;
+  }
+
+  .btn--size-default {
+    @apply h-10 px-4 py-2;
+  }
+  .btn--size-sm {
+    @apply h-9 rounded-md px-3;
+  }
+  .btn--size-lg {
+    @apply h-11 rounded-md px-8;
+  }
+  .btn--size-icon {
+    @apply h-10 w-10;
+  }
+
   .btn-primary {
     @apply bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center rounded-md px-4 py-2 font-semibold transition;
   }
