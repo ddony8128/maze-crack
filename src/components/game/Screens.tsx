@@ -163,7 +163,11 @@ export function WinScreen({
             <Button
               variant={isPlaying ? 'secondary' : 'default'}
               size="default"
-              className={isPlaying ? 'bg-secondary text-secondary-foreground' : 'bg-primary text-primary-foreground'}
+              className={
+                isPlaying
+                  ? 'bg-secondary text-secondary-foreground'
+                  : 'bg-primary text-primary-foreground'
+              }
               onClick={() => setIsPlaying((v) => !v)}
             >
               {isPlaying ? '일시정지' : '재생'}

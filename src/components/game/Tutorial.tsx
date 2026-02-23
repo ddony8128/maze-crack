@@ -29,7 +29,7 @@ const steps = [
   {
     icon: '📍',
     title: '출발점 & 도착점',
-    desc: '5×5 격자에서 출발점(S)과 도착점(G)을\n원하는 위치에 배치합니다.',
+    desc: '5x5 격자에서 출발점(S)과 도착점(G)을\n원하는 위치에 배치합니다.',
   },
   {
     icon: '🧱',
@@ -196,9 +196,7 @@ export default function Tutorial({
 
       <div className="text-center" key={step}>
         <p className="mb-2 text-[clamp(2rem,9vw,2.75rem)]">{s.icon}</p>
-        <h2 className="text-primary mb-2 text-[clamp(1.25rem,5vw,1.75rem)] font-bold">
-          {s.title}
-        </h2>
+        <h2 className="text-primary mb-2 text-[clamp(1.25rem,5vw,1.75rem)] font-bold">{s.title}</h2>
         <p className="text-muted-foreground mx-auto max-w-xs text-[clamp(0.85rem,3.2vw,0.95rem)] leading-relaxed whitespace-pre-line">
           {s.desc}
         </p>

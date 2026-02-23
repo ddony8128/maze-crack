@@ -31,12 +31,7 @@ export default function GameScreen({ state, onMove, onHome, onConfirmWallHit }: 
   const pos = positions[idx]!;
   const isAITurn = mode === 'PVE' && currentTurn === 'P2';
   const inputEnabled = !isAITurn && !wallHitPending;
-  const headerText =
-    mode === 'PVE'
-      ? isP1
-        ? '당신의 턴'
-        : 'AI의 턴'
-      : `${currentTurn}의 턴`;
+  const headerText = mode === 'PVE' ? (isP1 ? '당신의 턴' : 'AI의 턴') : `${currentTurn}의 턴`;
   const controlSize = 'clamp(44px, 14vw, 56px)';
   const [shake, setShake] = useState(false);
   const prevPendingRef = useRef<boolean>(wallHitPending);
@@ -107,7 +102,9 @@ export default function GameScreen({ state, onMove, onHome, onConfirmWallHit }: 
     },
     {
       dir: 'RIGHT',
-      icon: <ArrowRight className="h-[clamp(1.1rem,4.5vw,1.5rem)] w-[clamp(1.1rem,4.5vw,1.5rem)]" />,
+      icon: (
+        <ArrowRight className="h-[clamp(1.1rem,4.5vw,1.5rem)] w-[clamp(1.1rem,4.5vw,1.5rem)]" />
+      ),
       area: 'right',
     },
     {

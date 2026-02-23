@@ -74,9 +74,7 @@ export function TwoPlayerPage() {
   }
 
   if (phase === 'WIN' && gameState) {
-    return (
-      <WinScreen finalState={gameState} onRestart={() => navigate('/')} />
-    );
+    return <WinScreen finalState={gameState} onRestart={() => navigate('/')} />;
   }
 
   if (!gameState) return null;

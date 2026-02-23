@@ -132,10 +132,7 @@ export class MazeCrackGame {
       visited: newVisited,
       phase: didWin ? 'WIN' : 'PLAY',
       winner: didWin ? player : null,
-      log: [
-        ...this.state.log,
-        { playerId: player, direction, success: true, position: { ...to } },
-      ],
+      log: [...this.state.log, { playerId: player, direction, success: true, position: { ...to } }],
     };
 
     return this.getPublicState();

@@ -111,7 +111,9 @@ export default function MazeBuilder({ owner, onComplete, onBack }: MazeBuilderPr
         ) : isValid ? (
           <span className="text-green-400">✓ 유효한 미로</span>
         ) : (
-          <span className="text-destructive">✗ 출발점부터 도착점까지 갈 수 있는 방법이 없습니다</span>
+          <span className="text-destructive">
+            ✗ 출발점부터 도착점까지 갈 수 있는 방법이 없습니다
+          </span>
         )}
       </div>
 
