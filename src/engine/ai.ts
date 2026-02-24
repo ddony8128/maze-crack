@@ -51,10 +51,8 @@ export class MazeAI {
     const next = this.nextDirectionFromRoute(pos);
     if (next) return next;
 
-    const target =
-      this.difficulty === 'HARD' && Math.random() < HARD_EXPLORE_TARGET_PROB
-        ? this.pickExplorationTarget(pos, goal)
-        : goal;
+    const exploring = this.difficulty === 'HARD' && Math.random() < HARD_EXPLORE_TARGET_PROB;
+    const target = exploring ? this.pickExplorationTarget(pos, goal) : goal;
 
     const route = this.findMinCostRoute(pos, target);
     if (!route || route.length === 0) {
