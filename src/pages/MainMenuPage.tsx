@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, Rabbit, Turtle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import logo from '@/assets/logo.png';
 
 export function MainMenuPage() {
   const navigate = useNavigate();
@@ -10,6 +11,13 @@ export function MainMenuPage() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-5 py-14 sm:px-8 sm:py-20">
       <div className="mb-10 text-center sm:mb-14">
+        <img
+          src={logo}
+          alt="Maze Crack 로고"
+          className="neon-glow mx-auto mb-4 h-[clamp(72px,30vw,300px)] w-auto select-none"
+          decoding="async"
+          draggable={false}
+        />
         <h1 className="game-title mb-2">Maze Crack</h1>
         <p className="text-muted-foreground text-sm sm:text-base">상대의 미로를 해독하라!</p>
       </div>
