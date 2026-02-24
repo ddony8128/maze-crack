@@ -87,7 +87,8 @@
     @apply h-11 rounded-md px-7 text-base sm:h-12 sm:px-10 sm:text-lg;
   }
   .btn--size-icon {
-    @apply h-10 w-10 sm:h-11 sm:w-11;
+    @apply h-12 w-12 sm:h-12 sm:w-12;
+    @apply [&_svg]:size-5;
   }
 
   .btn-primary {

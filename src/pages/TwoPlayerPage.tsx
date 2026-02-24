@@ -74,7 +74,18 @@ export function TwoPlayerPage() {
   }
 
   if (phase === 'WIN' && gameState) {
-    return <WinScreen finalState={gameState} onRestart={() => navigate('/')} />;
+    return (
+      <WinScreen
+        finalState={gameState}
+        onRestart={() => {
+          gameRef.current = null;
+          setGameState(null);
+          setP1Maze(null);
+          setPhase('BUILD_P1');
+        }}
+        onHome={() => navigate('/')}
+      />
+    );
   }
 
   if (!gameState) return null;

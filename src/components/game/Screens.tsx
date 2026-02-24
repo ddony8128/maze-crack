@@ -10,10 +10,10 @@ export function PassScreen({ onReady }: { onReady: () => void }) {
     <div className="flex min-h-dvh flex-col items-center justify-center gap-8 p-5 sm:p-8">
       <div className="text-center">
         <p className="mb-4 text-[clamp(2.5rem,10vw,3.5rem)]">🔒</p>
-        <h2 className="text-foreground mb-2 text-[clamp(1.25rem,5vw,1.75rem)] font-bold">
-          기기를 넘겨주세요
+        <h2 className="text-foreground mb-2 text-lg font-bold sm:text-2xl">
+          다음 사람에게 넘겨주세요
         </h2>
-        <p className="text-muted-foreground text-sm sm:text-base">
+        <p className="text-muted-foreground text-base sm:text-lg">
           P2가 미로를 제작합니다.
           <br />
           P1은 화면을 보지 마세요!
@@ -33,9 +33,11 @@ export function PassScreen({ onReady }: { onReady: () => void }) {
 export function WinScreen({
   finalState,
   onRestart,
+  onHome,
 }: {
   finalState: PublicGameState;
   onRestart: () => void;
+  onHome: () => void;
 }) {
   const winner: Player = finalState.winner ?? 'P1';
   const mode = finalState.mode;
@@ -107,7 +109,9 @@ export function WinScreen({
         <h2 className="neon-text-accent text-accent mb-2 text-[clamp(2rem,7vw,2.75rem)] font-bold">
           {label} 승리!
         </h2>
-        <p className="text-muted-foreground text-base">정답 미로와 이동 경로를 확인해보세요</p>
+        <p className="text-muted-foreground text-base sm:text-xl">
+          정답 미로와 이동 경로를 확인해보세요
+        </p>
       </div>
 
       <div
@@ -216,7 +220,7 @@ export function WinScreen({
           variant="outline"
           size="lg"
           className="border-muted-foreground/40 text-muted-foreground gap-2"
-          onClick={onRestart}
+          onClick={onHome}
         >
           <Home className="h-4 w-4" /> 메인
         </Button>

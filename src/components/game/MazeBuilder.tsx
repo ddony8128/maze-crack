@@ -4,7 +4,7 @@ import type { MazeSpec, Position } from '@/engine/types';
 import { hasPath } from '@/engine/maze';
 import MazeGrid from './MazeGrid';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Check, Fence, Flag, MapPin } from 'lucide-react';
+import { Check, Fence, Flag, Home, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MazeBuilderProps {
@@ -60,15 +60,16 @@ export default function MazeBuilder({ owner, onComplete, onBack }: MazeBuilderPr
       {onBack ? (
         <Button
           variant="ghost"
-          size="default"
+          size="icon"
           className="text-muted-foreground absolute top-4 left-4"
           onClick={onBack}
+          aria-label="메인으로"
         >
-          <ArrowLeft className="mr-1 h-4 w-4" /> 뒤로
+          <Home />
         </Button>
       ) : null}
 
-      <h2 className="text-primary text-2xl font-bold">{owner} — 미로 제작</h2>
+      <h2 className="text-primary text-xl font-bold sm:text-2xl">{owner} 미로 제작</h2>
 
       <div className="flex gap-2">
         {tools.map((t) => (
@@ -89,10 +90,10 @@ export default function MazeBuilder({ owner, onComplete, onBack }: MazeBuilderPr
         ))}
       </div>
 
-      <p className="text-muted-foreground text-base">
-        {tool === 'START' && '셀을 탭하여 출발점 지정'}
-        {tool === 'GOAL' && '셀을 탭하여 도착점 지정'}
-        {tool === 'WALL' && '칸 사이를 탭하여 벽 토글'}
+      <p className="text-muted-foreground text-sm sm:text-lg">
+        {tool === 'START' && '출발점을 지정하세요.'}
+        {tool === 'GOAL' && '도착점을 지정하세요.'}
+        {tool === 'WALL' && '칸 사이를 눌러 벽을 만들기 / 없애기'}
       </p>
 
       <MazeGrid
@@ -105,7 +106,7 @@ export default function MazeBuilder({ owner, onComplete, onBack }: MazeBuilderPr
         onWallToggle={handleWallToggle}
       />
 
-      <div className="text-base font-medium">
+      <div className="text-sm font-medium sm:text-lg">
         {!start || !goal ? (
           <span className="text-muted-foreground">출발점과 도착점을 배치하세요</span>
         ) : isValid ? (

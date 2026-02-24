@@ -18,11 +18,11 @@ export function MainMenuPage() {
           decoding="async"
           draggable={false}
         />
-        <h1 className="game-title mb-2">Maze Crack</h1>
-        <p className="text-muted-foreground text-sm sm:text-base">상대의 미로를 해독하라!</p>
+        <h1 className="game-title mb-2 text-[clamp(2.25rem,7vw,3.75rem)]">Maze Crack</h1>
+        <p className="text-muted-foreground text-base sm:text-xl">상대의 미로를 해독하라!</p>
       </div>
 
-      <div className="flex w-[clamp(220px,70vw,360px)] flex-col gap-3 sm:gap-4">
+      <div className="flex w-[clamp(220px,70vw,440px)] flex-col gap-4 sm:gap-6">
         <Button className="btn-menu" onClick={() => navigate('/tutorial')}>
           튜토리얼
         </Button>
@@ -35,7 +35,7 @@ export function MainMenuPage() {
           <ChevronDown className="h-5 w-5" />
         </Button>
         {isSingleOpen && (
-          <div className="flex flex-col items-center gap-3 sm:gap-4">
+          <div className="flex flex-col items-center gap-4 sm:gap-6">
             <Button className="btn-menu w-4/5" onClick={() => navigate('/single/easy')}>
               쉬움 <Turtle className="h-5 w-5" />
             </Button>

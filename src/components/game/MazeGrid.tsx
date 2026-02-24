@@ -119,34 +119,50 @@ export default function MazeGrid({
         const c = (gc - 1) / 2;
         const wk = makeWallKey({ row: r, col: c }, { row: r, col: c + 1 });
         const active = walls.includes(wk);
+        const interactive = editable && activeTool === 'WALL';
         items.push(
           <div
             key={key}
             className={cn(
-              'touch-none rounded-full transition-all duration-150',
+              'relative touch-none rounded-full transition-all duration-150',
               active ? 'bg-primary/70' : 'bg-border/20',
-              editable && activeTool === 'WALL' && 'hover:bg-primary/40 cursor-pointer',
+              interactive && 'hover:bg-primary/40 cursor-pointer',
             )}
-            onPointerDown={() => handleWallPointerDown(wk, active)}
-            onPointerEnter={() => handleWallPointerEnter(wk, active)}
-          />,
+          >
+            <div
+              className={cn(
+                'absolute top-0 left-1/2 h-full w-[calc(var(--mc-wall)*5)] -translate-x-1/2 touch-none rounded-full',
+                interactive ? 'pointer-events-auto' : 'pointer-events-none',
+              )}
+              onPointerDown={() => handleWallPointerDown(wk, active)}
+              onPointerEnter={() => handleWallPointerEnter(wk, active)}
+            />
+          </div>,
         );
       } else if (isHWall) {
         const r = (gr - 1) / 2;
         const c = gc / 2;
         const wk = makeWallKey({ row: r, col: c }, { row: r + 1, col: c });
         const active = walls.includes(wk);
+        const interactive = editable && activeTool === 'WALL';
         items.push(
           <div
             key={key}
             className={cn(
-              'touch-none rounded-full transition-all duration-150',
+              'relative touch-none rounded-full transition-all duration-150',
               active ? 'bg-primary/70' : 'bg-border/20',
-              editable && activeTool === 'WALL' && 'hover:bg-primary/40 cursor-pointer',
+              interactive && 'hover:bg-primary/40 cursor-pointer',
             )}
-            onPointerDown={() => handleWallPointerDown(wk, active)}
-            onPointerEnter={() => handleWallPointerEnter(wk, active)}
-          />,
+          >
+            <div
+              className={cn(
+                'absolute top-1/2 left-0 h-[calc(var(--mc-wall)*5)] w-full -translate-y-1/2 touch-none rounded-full',
+                interactive ? 'pointer-events-auto' : 'pointer-events-none',
+              )}
+              onPointerDown={() => handleWallPointerDown(wk, active)}
+              onPointerEnter={() => handleWallPointerEnter(wk, active)}
+            />
+          </div>,
         );
       } else {
         items.push(<div key={key} className="bg-border/10 rounded-full" />);
@@ -167,7 +183,6 @@ export default function MazeGrid({
       style={
         {
           '--mc-wall': compact ? 'clamp(3px, 1.2vw, 6px)' : 'clamp(4px, 1.6vw, 7px)',
-          // 그리드가 컨테이너를 꽉 채우도록 셀 크기는 % 기반으로 산출한다.
           '--mc-cell': 'calc((100% - (4 * var(--mc-wall))) / 5)',
         } as React.CSSProperties
       }

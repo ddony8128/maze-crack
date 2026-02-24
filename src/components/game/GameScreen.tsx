@@ -29,7 +29,8 @@ export default function GameScreen({
   const pos = positions[idx]!;
   const isAITurn = mode === 'PVE' && currentTurn === 'P2';
   const inputEnabled = !isAITurn && !wallHitPending;
-  const headerText = mode === 'PVE' ? (isP1 ? '당신의 턴' : 'AI의 턴') : `${currentTurn}의 턴`;
+  const headerText =
+    mode === 'PVE' ? (isP1 ? '당신의 차례' : '컴퓨터의 차례') : `${currentTurn}의 차례`;
   const controlSize = 'clamp(44px, 14vw, 56px)';
   const [shake, setShake] = useState(false);
   const prevPendingRef = useRef<boolean>(wallHitPending);
@@ -117,7 +118,7 @@ export default function GameScreen({
     <div className="flex min-h-dvh flex-col items-center gap-3 p-3 sm:p-4">
       <div className="flex w-full max-w-[min(92vw,28rem)] items-center justify-between">
         <Button variant="ghost" size="icon" onClick={onHome} className="text-muted-foreground">
-          <Home className="h-4 w-4" />
+          <Home />
         </Button>
         <div className="text-center">
           <span
@@ -132,10 +133,6 @@ export default function GameScreen({
         <div className="w-8" />
       </div>
 
-      {isAITurn && !wallHitPending ? (
-        <p className="text-accent animate-pulse text-base">AI 생각 중...</p>
-      ) : null}
-
       <div className="flex w-full max-w-[min(92vw,28rem)] items-center justify-between">
         <div
           className={cn(
@@ -144,7 +141,7 @@ export default function GameScreen({
           )}
           aria-live="polite"
         >
-          🚧 벽에 부딪혔습니다!
+          벽에 부딪혔습니다!
         </div>
 
         <Button
@@ -156,7 +153,7 @@ export default function GameScreen({
           )}
           onClick={onConfirmWallHit}
         >
-          턴 넘기기
+          차례 넘기기
         </Button>
       </div>
 

@@ -16,7 +16,6 @@ export function SinglePlayPage() {
 
   const [phase, setPhase] = useState<'BUILD_P1' | 'AI_BUILD' | 'PLAY' | 'WIN'>('BUILD_P1');
   const [playerMaze, setPlayerMaze] = useState<MazeSpec | null>(null);
-  const [aiBuildDone, setAiBuildDone] = useState(false);
   const gameRef = useRef<MazeCrackGame | null>(null);
   const [gameState, setGameState] = useState<PublicGameState | null>(null);
 
@@ -42,10 +41,8 @@ export function SinglePlayPage() {
   useEffect(() => {
     if (phase !== 'AI_BUILD') return;
     if (!playerMaze) return;
-    setAiBuildDone(false);
     const maze = generateAIMaze(resolvedDifficulty);
     const t = window.setTimeout(() => {
-      setAiBuildDone(true);
       startGame(playerMaze, maze);
     }, 1800);
     return () => window.clearTimeout(t);
@@ -85,16 +82,27 @@ export function SinglePlayPage() {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-6 p-6">
         <Loader2 className="text-primary h-12 w-12 animate-spin" />
-        <h2 className="neon-text text-primary text-2xl font-bold">AI가 미로를 제작 중...</h2>
-        <p className="text-muted-foreground text-base">
-          {aiBuildDone ? '완료!' : '벽을 배치하고 있습니다'}
-        </p>
+        <h2 className="neon-text text-primary text-xl font-bold sm:text-2xl">
+          컴퓨터가 미로를 제작 중...
+        </h2>
       </div>
     );
   }
 
   if (phase === 'WIN' && gameState) {
-    return <WinScreen finalState={gameState} onRestart={() => navigate('/')} />;
+    return (
+      <WinScreen
+        finalState={gameState}
+        onRestart={() => {
+          ai.reset();
+          gameRef.current = null;
+          setGameState(null);
+          setPlayerMaze(null);
+          setPhase('BUILD_P1');
+        }}
+        onHome={() => navigate('/')}
+      />
+    );
   }
 
   if (!gameState) return null;
