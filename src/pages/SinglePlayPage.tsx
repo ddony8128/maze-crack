@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import type { Difficulty, Direction, MazeSpec, PublicGameState } from '@/engine/types';
-import { generateAIMaze } from '@/engine/ai';
+import { generateAIMaze, MazeAI } from '@/engine/ai';
 import { MazeCrackGame } from '@/engine/game';
 import GameScreen from '@/components/game/GameScreen';
 import MazeBuilder from '@/components/game/MazeBuilder';
@@ -20,8 +20,11 @@ export function SinglePlayPage() {
   const gameRef = useRef<MazeCrackGame | null>(null);
   const [gameState, setGameState] = useState<PublicGameState | null>(null);
 
+  const ai = useMemo(() => new MazeAI(resolvedDifficulty), [resolvedDifficulty]);
+
   const startGame = useCallback(
     (p1Maze: MazeSpec, p2Maze: MazeSpec) => {
+      ai.reset();
       const game = new MazeCrackGame({
         mode: 'PVE',
         difficulty: resolvedDifficulty,
@@ -33,7 +36,7 @@ export function SinglePlayPage() {
       setGameState(game.getPublicState());
       setPhase('PLAY');
     },
-    [resolvedDifficulty],
+    [ai, resolvedDifficulty],
   );
 
   useEffect(() => {
@@ -99,6 +102,7 @@ export function SinglePlayPage() {
   return (
     <GameScreen
       state={gameState}
+      ai={ai}
       onMove={handleMove}
       onHome={() => navigate('/')}
       onConfirmWallHit={handleConfirmWallHit}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Direction, PublicGameState } from '@/engine/types';
-import { aiChooseDirection } from '@/engine/ai';
+import type { MazeAI } from '@/engine/ai';
 import MazeGrid from './MazeGrid';
 import { Button } from '@/components/ui/button';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Home } from 'lucide-react';
@@ -8,22 +8,20 @@ import { cn } from '@/lib/utils';
 
 interface GameScreenProps {
   state: PublicGameState;
+  ai?: MazeAI | null;
   onMove: (dir: Direction) => void;
   onHome: () => void;
   onConfirmWallHit: () => void;
 }
 
-export default function GameScreen({ state, onMove, onHome, onConfirmWallHit }: GameScreenProps) {
-  const {
-    mode,
-    currentTurn,
-    mazes,
-    positions,
-    discoveredWalls,
-    visited,
-    difficulty,
-    wallHitPending,
-  } = state;
+export default function GameScreen({
+  state,
+  ai,
+  onMove,
+  onHome,
+  onConfirmWallHit,
+}: GameScreenProps) {
+  const { mode, currentTurn, mazes, positions, discoveredWalls, visited, wallHitPending } = state;
   const isP1 = currentTurn === 'P1';
   const idx = isP1 ? 0 : 1;
   const mazeIdx = isP1 ? 1 : 0;
@@ -38,16 +36,17 @@ export default function GameScreen({ state, onMove, onHome, onConfirmWallHit }: 
 
   useEffect(() => {
     if (isAITurn && state.phase === 'PLAY' && !wallHitPending) {
+      if (!ai) return;
       const timer = window.setTimeout(
         () => {
-          const dir = aiChooseDirection(pos, maze.goal, discoveredWalls[1], difficulty!);
+          const dir = ai.chooseDirection(pos, maze.goal, discoveredWalls[1]);
           onMove(dir);
         },
         800 + Math.random() * 600,
       );
       return () => window.clearTimeout(timer);
     }
-  }, [isAITurn, state.phase, wallHitPending, pos, maze.goal, discoveredWalls, difficulty, onMove]);
+  }, [isAITurn, state.phase, wallHitPending, ai, pos, maze.goal, discoveredWalls, onMove]);
 
   useEffect(() => {
     if (isAITurn && wallHitPending) {

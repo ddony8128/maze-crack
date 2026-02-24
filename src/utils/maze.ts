@@ -7,5 +7,5 @@ export {
   posLabel,
   ROW_LABELS,
 } from '@/engine/coord';
-export { aiChooseDirection, generateAIMaze } from '@/engine/ai';
+export { generateAIMaze, MazeAI } from '@/engine/ai';
 export { getAllPossibleWalls, hasPath, makeWallKey } from '@/engine/maze';
