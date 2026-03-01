@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 interface GameScreenProps {
   state: PublicGameState;
   ai?: MazeAI | null;
+  playerNames?: [string, string];
   onMove: (dir: Direction) => void;
   onHome: () => void;
   onConfirmWallHit: () => void;
@@ -17,6 +18,7 @@ interface GameScreenProps {
 export default function GameScreen({
   state,
   ai,
+  playerNames,
   onMove,
   onHome,
   onConfirmWallHit,
@@ -29,8 +31,9 @@ export default function GameScreen({
   const pos = positions[idx]!;
   const isAITurn = mode === 'PVE' && currentTurn === 'P2';
   const inputEnabled = !isAITurn && !wallHitPending;
+  const currentName = playerNames ? playerNames[idx] : currentTurn;
   const headerText =
-    mode === 'PVE' ? (isP1 ? '당신의 차례' : '컴퓨터의 차례') : `${currentTurn}의 차례`;
+    mode === 'PVE' ? (isP1 ? '당신의 차례' : '컴퓨터의 차례') : `${currentName}의 차례`;
   const controlSize = 'clamp(44px, 14vw, 56px)';
   const [shake, setShake] = useState(false);
   const prevPendingRef = useRef<boolean>(wallHitPending);

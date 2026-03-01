@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button';
 import MazeGrid from './MazeGrid';
 import { posKey } from '@/engine/coord';
 
-export function PassScreen({ onReady }: { onReady: () => void }) {
+export function PassScreen({ playerNames, onReady }: { playerNames?: [string, string]; onReady: () => void }) {
+  const p1 = playerNames?.[0] ?? 'P1';
+  const p2 = playerNames?.[1] ?? 'P2';
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-8 p-5 sm:p-8">
       <div className="text-center">
@@ -14,9 +16,9 @@ export function PassScreen({ onReady }: { onReady: () => void }) {
           다음 사람에게 넘겨주세요
         </h2>
         <p className="text-muted-foreground text-base sm:text-lg">
-          P2가 미로를 제작합니다.
+          {p2}가 미로를 제작합니다.
           <br />
-          P1은 화면을 보지 마세요!
+          {p1}은 화면을 보지 마세요!
         </p>
       </div>
       <Button
@@ -32,17 +34,20 @@ export function PassScreen({ onReady }: { onReady: () => void }) {
 
 export function WinScreen({
   finalState,
+  playerNames,
   onRestart,
   onHome,
 }: {
   finalState: PublicGameState;
+  playerNames?: [string, string];
   onRestart: () => void;
   onHome: () => void;
 }) {
   const winner: Player = finalState.winner ?? 'P1';
   const mode = finalState.mode;
+  const winnerName = playerNames ? playerNames[winner === 'P1' ? 0 : 1] : winner;
 
-  const label = mode === 'PVE' ? (winner === 'P1' ? '당신' : 'AI') : winner;
+  const label = mode === 'PVE' ? (winner === 'P1' ? '당신' : 'AI') : winnerName;
 
   const [viewPlayer, setViewPlayer] = useState<Player>('P1');
   const [isPlaying, setIsPlaying] = useState(true);
@@ -129,7 +134,7 @@ export function WinScreen({
             }
             onClick={() => setViewPlayer('P1')}
           >
-            P1
+            {playerNames?.[0] ?? 'P1'}
           </Button>
           <Button
             variant={viewPlayer === 'P2' ? 'default' : 'outline'}
@@ -141,7 +146,7 @@ export function WinScreen({
             }
             onClick={() => setViewPlayer('P2')}
           >
-            P2
+            {playerNames?.[1] ?? 'P2'}
           </Button>
         </div>
 

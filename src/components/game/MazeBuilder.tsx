@@ -9,11 +9,12 @@ import { cn } from '@/lib/utils';
 
 interface MazeBuilderProps {
   owner: string;
+  ownerName?: string;
   onComplete: (maze: MazeSpec) => void;
   onBack?: () => void;
 }
 
-export default function MazeBuilder({ owner, onComplete, onBack }: MazeBuilderProps) {
+export default function MazeBuilder({ owner, ownerName, onComplete, onBack }: MazeBuilderProps) {
   const [start, setStart] = useState<Position | null>(null);
   const [goal, setGoal] = useState<Position | null>(null);
   const [walls, setWalls] = useState<string[]>([]);
@@ -69,7 +70,7 @@ export default function MazeBuilder({ owner, onComplete, onBack }: MazeBuilderPr
         </Button>
       ) : null}
 
-      <h2 className="text-primary text-xl font-bold sm:text-2xl">{owner} 미로 제작</h2>
+      <h2 className="text-primary text-xl font-bold sm:text-2xl">{ownerName ?? owner} 미로 제작</h2>
 
       <div className="flex gap-2">
         {tools.map((t) => (

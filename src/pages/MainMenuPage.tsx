@@ -46,7 +46,7 @@ export function MainMenuPage() {
         )}
 
         <Button className="btn-menu" onClick={() => navigate('/two')}>
-          둘이 하기
+          결투!
         </Button>
       </div>
     </div>
