@@ -1,4 +1,4 @@
-import type { Direction, Difficulty, GameMode, MazeSpec, PlayerId, PublicGameState } from './types';
+import type { Direction, Difficulty, GameMode, MazeSpec, PlayerId, Position, PublicGameState, WallKey } from './types';
 import { EngineError, EngineErrorCode } from './errors';
 import { isSamePos, posKey } from './coord';
 import { Maze } from './maze';
@@ -9,6 +9,7 @@ export type MazeCrackGameConfig = {
   p1Maze: MazeSpec;
   p2Maze: MazeSpec;
   startingPlayer: PlayerId;
+  memoryMode?: boolean;
 };
 
 function opponentOf(player: PlayerId): PlayerId {
@@ -34,9 +35,11 @@ function opponentMazeIndexOf(player: PlayerId): 0 | 1 {
 export class MazeCrackGame {
   private readonly p1Maze: Maze;
   private readonly p2Maze: Maze;
+  private readonly memoryMode: boolean;
   private state: PublicGameState;
 
   constructor(config: MazeCrackGameConfig) {
+    this.memoryMode = config.memoryMode ?? false;
     this.p1Maze = new Maze(config.p1Maze);
     this.p2Maze = new Maze(config.p2Maze);
 
@@ -142,11 +145,41 @@ export class MazeCrackGame {
     if (this.state.phase !== 'PLAY') return this.getPublicState();
     if (!this.state.wallHitPending) return this.getPublicState();
 
-    this.state = {
+    const nextState: PublicGameState = {
       ...this.state,
       wallHitPending: false,
       currentTurn: opponentOf(this.state.currentTurn),
     };
+
+    if (this.memoryMode) {
+      const endingIdx = tokenIndexOf(this.state.currentTurn);
+      const oppMazeIdx = opponentMazeIndexOf(this.state.currentTurn);
+      const startPos = oppMazeIdx === 0 ? this.p1Maze.start : this.p2Maze.start;
+
+      const newPositions: [Position, Position] = [
+        { ...nextState.positions[0] },
+        { ...nextState.positions[1] },
+      ];
+      newPositions[endingIdx] = { ...startPos };
+
+      const newDiscoveredWalls: [WallKey[], WallKey[]] = [
+        [...nextState.discoveredWalls[0]],
+        [...nextState.discoveredWalls[1]],
+      ];
+      newDiscoveredWalls[endingIdx] = [];
+
+      const newVisited: [string[], string[]] = [
+        [...nextState.visited[0]],
+        [...nextState.visited[1]],
+      ];
+      newVisited[endingIdx] = [posKey(startPos)];
+
+      nextState.positions = newPositions;
+      nextState.discoveredWalls = newDiscoveredWalls;
+      nextState.visited = newVisited;
+    }
+
+    this.state = nextState;
     return this.getPublicState();
   }
 }

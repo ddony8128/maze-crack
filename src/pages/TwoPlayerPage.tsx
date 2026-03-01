@@ -21,6 +21,7 @@ export function TwoPlayerPage() {
       p1Maze: maze1,
       p2Maze: maze2,
       startingPlayer: 'P1',
+      memoryMode: true,
     });
     gameRef.current = game;
     setGameState(game.getPublicState());
